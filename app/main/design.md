@@ -3,3 +3,5 @@
 - components/PlanningPhase.tsx (フェーズ1: AI提案プレビュー)
 - components/MonitoringPhase.tsx (フェーズ2: タスクリスト)
 - app/page.tsx (全体の状態管理とレイアウト)
+
+その他リファクタリング炭
