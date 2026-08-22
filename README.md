@@ -1,2 +1,3 @@
-# AI-Driven-Reverse-Scheduler
-計画を余裕を持って、かつ動的に管理・改組するアプリケーション。(Next.js)
+# AI-Driven Reverse Scheduler
+
+計画を余裕を持って、かつ動的に管理・改組するアプリケーション。
