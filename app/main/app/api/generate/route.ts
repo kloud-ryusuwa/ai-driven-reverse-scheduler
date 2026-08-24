@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// 🌸 さくらのAI Engineに接続するための設定
-const openai = new OpenAI({
-  apiKey: process.env.SAKURA_API_KEY,
-  baseURL: process.env.SAKURA_BASE_URL, 
-});
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.SAKURA_API_KEY,
+    baseURL: process.env.SAKURA_BASE_URL,
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
     `;
 
     // 🌸 モデル名をさくらのものに指定
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-oss-120b', // llm-jp-3.1-8x13b-instruct4 に変更してもOKです
       messages: [{ role: 'user', content: prompt }],
       // 互換APIによっては response_format でエラーになることがあるため、

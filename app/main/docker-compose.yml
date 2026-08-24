@@ -9,10 +9,30 @@ services:
       - .:/app
       - node_modules:/app/node_modules
       - next_cache:/app/.next
+      # SQLite データベースファイルをコンテナ再起動後も永続化するためのボリューム
+      - db_data:/app/data
     environment:
+      NODE_ENV: development
       WATCHPACK_POLLING: "true"
+      # docs/database.md に基づく SQLite 設定
+      DATABASE_URL: file:/app/data/dev.sqlite
+      # さくらのAI Engine (OpenAI互換API) 設定
+      # ホスト側の .env ファイルに SAKURA_API_KEY / SAKURA_BASE_URL を設定してください
+      SAKURA_API_KEY: ${SAKURA_API_KEY}
+      SAKURA_BASE_URL: ${SAKURA_BASE_URL}
     command: npm run dev
+
+  # SQLite はファイルベースのためサーバー自体は不要ですが、
+  # データベース閲覧・管理用 UI を `db` サービスとして提供します
+  db:
+    image: coleifer/sqlite-web:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - db_data:/data
+    command: ["sqlite_web", "-H", "0.0.0.0", "-p", "8080", "/data/dev.sqlite"]
 
 volumes:
   node_modules:
   next_cache:
+  db_data:

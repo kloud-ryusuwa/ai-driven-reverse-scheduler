@@ -6,18 +6,19 @@ import IntakePhase from "../components/IntakePhase";
 import PlanningPhase from "../components/PlanningPhase";
 import MonitoringPhase from "../components/MonitoringPhase";
 import { MainTask } from "../types/task";
+import type { AIProposal, AIProposalSubtask } from "../lib/types";
 
 
 export default function Home() {
   // パネルと選択されたタスクの管理
   const [panelMode, setPanelMode] = useState<"none" | "yellow" | "red">("none");
   const [selectedTask, setSelectedTask] = useState<MainTask | null>(null);
-  const [currentDeadline, setCurrentDeadline] = useState<string>("");
+  const [currentDeadline] = useState<string>("");
 
   // 画面遷移とAI連携の管理
   const [phase, setPhase] = useState<"intake" | "planning" | "monitoring">("intake");
   const [isLoading, setIsLoading] = useState(false);
-  const [aiProposal, setAiProposal] = useState<any>(null);
+  const [aiProposal, setAiProposal] = useState<AIProposal | null>(null);
 
   // 🌟 タスクリストの管理 (初期データとしてデモを1件入れています)
   const [tasks, setTasks] = useState<MainTask[]>([
@@ -67,7 +68,7 @@ export default function Home() {
       bufferPercentage: 100,
       completedSubtasks: 0,
       totalSubtasks: safeSubtasks.length || 1,
-      subtasks: safeSubtasks.map((sub: any, index: number) => ({
+      subtasks: safeSubtasks.map((sub: AIProposalSubtask, index: number) => ({
         id: `sub-${Date.now()}-${index}`,
         title: sub.title || "名称不明のサブタスク",
         isDone: false,
