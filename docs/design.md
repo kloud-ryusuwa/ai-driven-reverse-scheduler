@@ -2,7 +2,13 @@
 
 ## 概要
 
-本ドキュメントは、AI-Driven Reverse Scheduler のアプリケーション構成と、各ファイル・ディレクトリの役割を定義する。本システムは Next.js（App Router）をベースとしたフロントエンド中心の構成であり、バックエンドは Next.js API Routes と外部 AI API（さくらの AI Engine）を組み合わせて実現する。
+本ドキュメントは、AI-Driven Reverse Scheduler のアプリケーション構成と、各ファイル・ディレクトリの役割を定義する。
+
+## 技術スタック
+
+- アプリケーション: Next.js
+- DB: SQLite
+- AI: さくらのAI Engine
 
 ## ディレクトリ構成
 
@@ -112,7 +118,7 @@ AI が生成した計画をプレビュー表示するコンポーネント。
 
 ## 今後の拡張
 
-- 永続化層（SQLite / PostgreSQL）の導入
+- SQLiteの導入
 - 外部カレンダー連携
 - 依存関係の可視化
 - ユーザー評価（Evaluations）のフィードバックループ
