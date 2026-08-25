@@ -6,6 +6,7 @@ import Link from "next/link";
 import IntakePhase from "@/components/IntakePhase";
 import PlanningPhase from "@/components/PlanningPhase";
 import type { AIProposal } from "@/lib/types";
+import { Alert, Box, Breadcrumbs, CircularProgress, Container, Link as MuiLink, Stack, Typography } from "@mui/material";
 
 export default function NewProjectPageContent() {
   const router = useRouter();
@@ -90,19 +91,12 @@ export default function NewProjectPageContent() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8 text-gray-800">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <header>
-          <Link href="/" className="text-sm text-blue-600 hover:underline">
-            ← ダッシュボード
-          </Link>
-          <h1 className="text-3xl font-bold mt-2">新しいプロジェクト</h1>
-        </header>
+    <Box component="main" sx={{ minHeight: "100vh", py: { xs: 3, md: 5 } }}><Container maxWidth="md">
+        <Breadcrumbs sx={{ mb: 2 }}><MuiLink component={Link} href="/" underline="hover" color="inherit">プロジェクト</MuiLink><Typography color="text.primary">新規作成</Typography></Breadcrumbs>
+        <Box component="header" sx={{ mb: 3 }}><Typography variant="h1">新しいプロジェクト</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>目標と期日を決め、AIの逆算プランをレビューして開始します。</Typography></Box>
 
         {error && (
-          <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
-            {error}
-          </div>
+          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
         )}
 
         {phase === "intake" && !isLoading && (
@@ -114,9 +108,7 @@ export default function NewProjectPageContent() {
         )}
 
         {isLoading && (
-          <div className="bg-white p-6 rounded-xl shadow-sm text-center animate-pulse font-bold text-blue-600">
-            🧠 さくらのAIが逆算スケジュールを構築中...
-          </div>
+          <Stack alignItems="center" spacing={2} sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider", borderRadius: 3, p: 6 }}><CircularProgress /><Typography fontWeight={700}>AIが逆算スケジュールを構築しています</Typography><Typography variant="body2" color="text.secondary">タスク分解と安全係数を計算中です。</Typography></Stack>
         )}
 
         {phase === "planning" && aiProposal && (
@@ -126,7 +118,6 @@ export default function NewProjectPageContent() {
             onReject={() => setPhase("intake")}
           />
         )}
-      </div>
-    </main>
+    </Container></Box>
   );
 }

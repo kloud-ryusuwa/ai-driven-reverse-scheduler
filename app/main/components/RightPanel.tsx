@@ -118,12 +118,12 @@ export default function RightPanel({
     }
   };
   return (
-    <aside className="w-96 h-[calc(100vh-4rem)] flex flex-col bg-white rounded-xl shadow-lg border border-gray-200 sticky top-8 animate-fade-in shrink-0">
+    <aside className="ai-panel w-96 h-[calc(100vh-4rem)] flex flex-col bg-white rounded-xl shadow-lg border border-gray-200 sticky top-8 animate-fade-in shrink-0" aria-label="AIによる計画立て直し">
       <div className="flex justify-between items-center p-4 border-b border-gray-100">
         <h3 className="font-bold text-lg">
           {mode === "yellow" ? "🟡 AIサポート" : "🔴 AIトリアージ"}
         </h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-black">
+        <button onClick={onClose} className="text-gray-400 hover:text-black" aria-label="AIパネルを閉じる">
           ✖
         </button>
       </div>

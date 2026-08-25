@@ -4,7 +4,8 @@ export function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-export type RouteParams<T> = Promise<T> | T;
+// Next.js 16 の Route Handler では動的 params は常に Promise で渡される。
+export type RouteParams<T> = Promise<T>;
 
 export async function resolveParams<T>(params: RouteParams<T>): Promise<T> {
   return await params;

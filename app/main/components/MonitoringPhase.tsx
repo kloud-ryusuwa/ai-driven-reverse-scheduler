@@ -1,5 +1,7 @@
 import { MainTask } from "../types/task";
 import { getStatusFromBuffer } from "../utils/calculations";
+import { Box, Button, Checkbox, Chip, LinearProgress, List, ListItem, ListItemButton, ListItemText, Paper, Stack, Typography } from "@mui/material";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 
 export type { MainTask } from "../types/task";
 
@@ -9,115 +11,49 @@ type MonitoringPhaseProps = {
   onOpenPanel?: (mode: "yellow" | "red", task: MainTask) => void;
 };
 
-const getDynamicColor = (percent: number, lightness: number = 50) => {
-  const hue = Math.max(0, Math.min(120, percent * 1.2));
-  return `hsl(${hue}, 85%, ${lightness}%)`;
-};
-
 export default function MonitoringPhase({
   task,
   onToggleSubtask,
   onOpenPanel,
 }: MonitoringPhaseProps) {
   const status = getStatusFromBuffer(task.bufferPercentage);
-  const progressWidth = `${
+  const progress =
     task.totalSubtasks === 0
       ? 0
       : (task.completedSubtasks / task.totalSubtasks) * 100
-  }%`;
-  const mainColor = getDynamicColor(task.bufferPercentage, 45);
-  const bgColor = getDynamicColor(task.bufferPercentage, 96);
-  const textColor = getDynamicColor(task.bufferPercentage, 30);
+  ;
+  const color = status === "green" ? "success" : status === "yellow" ? "warning" : "error";
+  const label = status === "green" ? "順調" : status === "yellow" ? "要注意" : "要トリアージ";
 
   return (
-    <section className="space-y-6 animate-fade-in">
-      <h2 className="text-lg font-bold">現在のタスク状況</h2>
-
-      <div
-        className="bg-white rounded-xl shadow-sm border-l-4 border-y border-r overflow-hidden relative"
-        style={{
-          borderLeftColor: mainColor,
-          borderColor: "#e5e7eb",
-          borderLeftWidth: "4px",
-        }}
-      >
-        <div
-          className="p-4 border-b flex justify-between items-center"
-          style={{ backgroundColor: bgColor, borderColor: "#f3f4f6" }}
-        >
-          <div>
-            <span
-              className="text-xs font-bold px-2 py-1 rounded-full shadow-sm"
-              style={{
-                backgroundColor: "white",
-                color: mainColor,
-                border: `1px solid ${mainColor}`,
-              }}
-            >
-              {status === "red"
-                ? "🚨 破綻寸前"
-                : status === "yellow"
-                ? "⚠️ 遅延の兆候あり"
-                : "✅ 順調"}
-            </span>
-            <h3 className="text-lg font-bold mt-2 text-gray-800">
-              {task.title}
-            </h3>
-            <p className="text-xs font-bold mt-1" style={{ color: textColor }}>
-              全体のバッファ残量: {task.bufferPercentage}% (進捗:{" "}
-              {task.completedSubtasks}/{task.totalSubtasks})
-            </p>
-          </div>
-
-          {status !== "green" && onOpenPanel && (
-            <button
-              onClick={() => onOpenPanel(status, task)}
-              className={`px-4 py-2 rounded-lg font-bold shadow-md transition-all text-white ${
-                status === "red" ? "animate-pulse" : ""
-              }`}
-              style={{ backgroundColor: mainColor }}
-            >
-              {status === "red" ? "AIに救済を求める" : "AIと相談する"}
-            </button>
-          )}
-        </div>
-
-        <div className="w-full bg-gray-100 h-2">
-          <div
-            className="h-2 rounded-r-full transition-all duration-500"
-            style={{ width: progressWidth, backgroundColor: mainColor }}
-          ></div>
-        </div>
-
-        <div className="p-4 space-y-2 bg-white">
+    <Box component="section">
+      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "center" }} spacing={2} sx={{ mb: 2 }}>
+        <Box><Typography variant="h2">実行タスク</Typography><Typography variant="body2" color="text.secondary">完了すると残工数とバッファが即時に再計算されます。</Typography></Box>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Chip color={color} label={label} size="small" />
+          {status !== "green" && onOpenPanel && <Button color={color} variant="contained" startIcon={<AutoAwesomeRoundedIcon />} onClick={() => onOpenPanel(status, task)}>AIと立て直す</Button>}
+        </Stack>
+      </Stack>
+      <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+        <Box sx={{ p: 2, bgcolor: "#fafbfe" }}>
+          <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}><Typography variant="body2" fontWeight={700}>全体進捗</Typography><Typography variant="body2" color="text.secondary">{task.completedSubtasks} / {task.totalSubtasks} 完了</Typography></Stack>
+          <LinearProgress variant="determinate" value={progress} color={color} sx={{ height: 8, borderRadius: 10 }} />
+        </Box>
+        <List disablePadding>
           {task.subtasks.map((sub) => (
-            <label
-              key={sub.id}
-              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-            >
-              <input
-                type="checkbox"
+            <ListItem key={sub.id} disablePadding divider>
+              <ListItemButton component="label">
+              <Checkbox
                 checked={sub.isDone}
                 onChange={(e) => onToggleSubtask?.(sub.id, e.target.checked)}
-                className="w-4 h-4 cursor-pointer"
-                style={{ accentColor: mainColor }}
               />
-              <span
-                className={`text-sm ${
-                  sub.isDone
-                    ? "text-gray-400 line-through"
-                    : "font-bold text-gray-800"
-                }`}
-              >
-                {sub.title}
-              </span>
-              <span className="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {sub.estimatedHours}h
-              </span>
-            </label>
+              <ListItemText primary={sub.title} secondary={sub.isDone ? "完了" : "未完了"} slotProps={{ primary: { sx: { fontWeight: 650, textDecoration: sub.isDone ? "line-through" : "none" } } }} />
+              <Chip label={`${sub.estimatedHours}h`} size="small" variant="outlined" />
+              </ListItemButton>
+            </ListItem>
           ))}
-        </div>
-      </div>
-    </section>
+        </List>
+      </Paper>
+    </Box>
   );
 }

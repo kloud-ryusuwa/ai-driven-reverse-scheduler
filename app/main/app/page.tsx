@@ -6,6 +6,8 @@ import Link from "next/link";
 import IntakePhase from "@/components/IntakePhase";
 import ProjectCard from "@/components/ProjectCard";
 import type { ProjectSummary } from "@/lib/types";
+import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 export default function Home() {
   const router = useRouter();
@@ -43,43 +45,33 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8 text-gray-800">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-3xl font-bold">AI-Driven Reverse Scheduler</h1>
-          <p className="text-gray-500 mt-2">期日を守る。間に合わないなら、削ろう。</p>
-        </header>
+    <Box component="main" sx={{ minHeight: "100vh", py: { xs: 3, md: 5 } }}>
+      <Container maxWidth="lg">
+        <Stack component="header" direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "flex-end" }} spacing={2} sx={{ mb: 3.5 }}>
+          <Box><Typography variant="overline" color="primary" fontWeight={800}>AI-DRIVEN REVERSE SCHEDULER</Typography><Typography variant="h1">締切から、仕事を設計する。</Typography><Typography color="text.secondary" sx={{ mt: .75 }}>余裕を可視化し、間に合わないときはAIとスコープを削る。</Typography></Box>
+          <Button component={Link} href="/projects/new" variant="contained" startIcon={<AddRoundedIcon />}>新規プロジェクト</Button>
+        </Stack>
 
         <IntakePhase onNext={handleStartNewProject} />
 
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">プロジェクト一覧</h2>
-            <Link
-              href="/projects/new"
-              className="text-sm bg-black text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-800 transition-colors"
-            >
-              新規プロジェクト
-            </Link>
-          </div>
+        <Box component="section" sx={{ mt: 5 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="end" sx={{ mb: 2 }}><Box><Typography variant="h2">進行中のプロジェクト</Typography><Typography variant="body2" color="text.secondary">危機状態のプロジェクトから確認してください。</Typography></Box><Typography variant="body2" color="text.secondary">{projects.length} 件</Typography></Stack>
 
           {loading ? (
-            <p className="text-gray-500">読み込み中...</p>
+            <Stack alignItems="center" py={6} spacing={1}><CircularProgress size={28} /><Typography color="text.secondary">読み込み中</Typography></Stack>
           ) : error ? (
-            <p className="text-red-600">{error}</p>
+            <Alert severity="error">{error}</Alert>
           ) : projects.length === 0 ? (
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center text-gray-500">
-              プロジェクトがありません。上のフォームから目標と期日を入力してください。
-            </div>
+            <Box sx={{ p: 5, bgcolor: "background.paper", border: "1px dashed #cbd2df", borderRadius: 3, textAlign: "center" }}><Typography fontWeight={700}>まだプロジェクトがありません</Typography><Typography variant="body2" color="text.secondary">上のフォームに最初のゴールを入力してください。</Typography></Box>
           ) : (
-            <div className="grid gap-4">
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
               {projects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
-            </div>
+            </Box>
           )}
-        </section>
-      </div>
-    </main>
+        </Box>
+      </Container>
+    </Box>
   );
 }

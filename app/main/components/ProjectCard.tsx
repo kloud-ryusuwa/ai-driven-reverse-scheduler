@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ProjectSummary } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
+import { Box, Card, CardActionArea, CardContent, Chip, LinearProgress, Stack, Typography } from "@mui/material";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 
 type ProjectCardProps = {
   project: ProjectSummary;
@@ -15,41 +17,23 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   const statusBadge =
     status === "green"
-      ? { label: "順調", bg: "bg-green-100", text: "text-green-700" }
+      ? { label: "順調", color: "success" as const }
       : status === "yellow"
-      ? { label: "警告", bg: "bg-yellow-100", text: "text-yellow-700" }
-      : { label: "危機", bg: "bg-red-100", text: "text-red-700" };
+      ? { label: "要注意", color: "warning" as const }
+      : { label: "危機", color: "error" as const };
 
   return (
-    <Link
-      href={`/projects/${project.id}`}
-      className="block bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-    >
-      <div className="flex justify-between items-start">
-        <div>
-          <span
-            className={`inline-block px-2 py-1 rounded-full text-xs font-bold mb-2 ${statusBadge.bg} ${statusBadge.text}`}
-          >
-            {statusBadge.label}
-          </span>
-          <h3 className="text-lg font-bold text-gray-800">{project.title}</h3>
-          <p className="text-sm text-gray-500">期日: {project.deadline}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-bold text-gray-700">
-            バッファ {project.bufferPercentage}%
-          </p>
-          <p className="text-xs text-gray-500">
-            {project.completedSubtasks}/{project.totalSubtasks} 完了
-          </p>
-        </div>
-      </div>
-      <div className="w-full bg-gray-100 h-2 rounded-full mt-4">
-        <div
-          className="h-2 rounded-full bg-blue-600 transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </Link>
+    <Card sx={{ height: "100%" }}>
+      <CardActionArea component={Link} href={`/projects/${project.id}`} sx={{ height: "100%" }}>
+        <CardContent sx={{ p: 2.5 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+            <Box sx={{ minWidth: 0 }}><Chip label={statusBadge.label} color={statusBadge.color} size="small" sx={{ mb: 1.25 }} /><Typography variant="h6" fontWeight={750} noWrap>{project.title}</Typography><Typography variant="body2" color="text.secondary">期日 {new Intl.DateTimeFormat("ja-JP", { month: "short", day: "numeric" }).format(new Date(`${project.deadline}T00:00:00`))}</Typography></Box>
+            <ArrowForwardRoundedIcon color="action" />
+          </Stack>
+          <Stack direction="row" justifyContent="space-between" sx={{ mt: 2, mb: .75 }}><Typography variant="caption" color="text.secondary">進捗 {project.completedSubtasks}/{project.totalSubtasks}</Typography><Typography variant="caption" fontWeight={750}>バッファ {Math.round(project.bufferPercentage)}%</Typography></Stack>
+          <LinearProgress variant="determinate" value={progress} color={statusBadge.color} sx={{ height: 7, borderRadius: 8 }} />
+        </CardContent>
+      </CardActionArea>
+    </Card>
   );
 }

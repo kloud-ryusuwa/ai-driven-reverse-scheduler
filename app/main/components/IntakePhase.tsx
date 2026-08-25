@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Box, Button, Card, CardContent, Stack, TextField, Typography } from "@mui/material";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 
 type IntakePhaseProps = {
   onNext: (task: string, date: string) => void;
@@ -33,31 +35,42 @@ export default function IntakePhase({
   };
 
   return (
-    <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <h2 className="text-lg font-bold mb-4">新しい目標を追加</h2>
-      <div className="flex flex-col md:flex-row gap-4">
-        <input
+    <Card component="section">
+      <CardContent sx={{ p: { xs: 2.5, md: 3.5 }, "&:last-child": { pb: { xs: 2.5, md: 3.5 } } }}>
+      <Typography variant="overline" color="primary" fontWeight={800}>START FROM THE DEADLINE</Typography>
+      <Typography variant="h2" sx={{ mb: .5 }}>ゴールから逆算して、今日の一歩を決める</Typography>
+      <Typography color="text.secondary" sx={{ mb: 2.5 }}>目標と絶対期日だけで、AIが余裕を含む実行計画を組み立てます。</Typography>
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+        <TextField
+          fullWidth
+          label="達成したいゴール"
           type="text"
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="タスク名 (例: 競合リサーチ)"
-          className="flex-1 p-3 border rounded-lg bg-gray-50"
+          placeholder="例：金曜のデモを完成させる"
         />
-        <input
+        <TextField
+          label="絶対期日"
           type="date"
           value={deadline}
           onChange={(e) => setDeadline(e.target.value)}
-          className="p-3 border rounded-lg bg-gray-50"
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ minWidth: 180 }}
         />
-        <button
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<AutoAwesomeRoundedIcon />}
           onClick={handleSubmit}
           disabled={!taskName.trim() || !deadline}
-          className="bg-black text-white px-6 py-3 rounded-lg font-bold disabled:bg-gray-400 hover:bg-gray-800 transition-colors"
+          sx={{ px: 3, whiteSpace: "nowrap" }}
         >
-          AIに計画させる
-        </button>
-      </div>
-    </section>
+          逆算プランを作る
+        </Button>
+      </Stack>
+      <Box sx={{ mt: 2, color: "text.secondary", fontSize: 12 }}>20%の安全係数を含めて見積もります。作成後に内容を確認できます。</Box>
+      </CardContent>
+    </Card>
   );
 }

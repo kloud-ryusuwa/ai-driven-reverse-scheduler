@@ -8,6 +8,11 @@ import RightPanel from "@/components/RightPanel";
 import type { MainTask } from "@/types/task";
 import type { BufferStatus, History, Project, TriageProposal } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
+import ProjectGantt from "@/components/ProjectGantt";
+import { Alert, Box, Breadcrumbs, Button, Card, CardContent, Chip, CircularProgress, Container, LinearProgress, Link as MuiLink, Paper, Stack, Typography } from "@mui/material";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -132,16 +137,12 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-100 p-8 text-gray-800">
-        読み込み中...
-      </main>
+      <Stack component="main" minHeight="100vh" alignItems="center" justifyContent="center" spacing={2}><CircularProgress /><Typography color="text.secondary">プロジェクトを読み込んでいます</Typography></Stack>
     );
   }
   if (error || !project || !status) {
     return (
-      <main className="min-h-screen bg-gray-100 p-8 text-red-600">
-        {error || "プロジェクトが見つかりません"}
-      </main>
+      <Container component="main" sx={{ py: 8 }}><Alert severity="error">{error || "プロジェクトが見つかりません"}</Alert></Container>
     );
   }
 
@@ -159,28 +160,44 @@ export default function ProjectDetailPage() {
       estimatedHours: s.estimatedHours,
     })),
   };
+  const currentStatus = getStatusFromBuffer(status.bufferPercentage);
+  const statusMeta = currentStatus === "green"
+    ? { label: "順調", color: "success" as const, message: "現在の計画で期日に到達できる見込みです。" }
+    : currentStatus === "yellow"
+      ? { label: "要注意", color: "warning" as const, message: "余裕が減っています。今のうちに優先度を見直しましょう。" }
+      : { label: "危機", color: "error" as const, message: "現行スコープでは期日超過の可能性があります。削減判断が必要です。" };
+  const deadlineLabel = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric" }).format(new Date(`${project.deadline}T00:00:00`));
+  const daysLeft = Math.max(0, Math.ceil(status.remainingTime / 24));
   return (
-    <main className="min-h-screen bg-gray-100 p-8 text-gray-800">
-      <div className="flex justify-center gap-6 max-w-6xl mx-auto items-start">
-        <div
-          className={`transition-all duration-300 space-y-6 ${
-            panelMode === "none" ? "w-full max-w-3xl" : "flex-1 max-w-2xl"
-          }`}
-        >
-          <header>
-            <Link href="/" className="text-sm text-blue-600 hover:underline">
-              ← ダッシュボード
-            </Link>
-            <h1 className="text-3xl font-bold mt-2">{project.title}</h1>
-            <p className="text-gray-500 mt-1">期日: {project.deadline}</p>
-          </header>
+    <Box component="main" sx={{ minHeight: "100vh", py: { xs: 2, md: 4 } }}>
+      <Container maxWidth="xl">
+        <Stack direction="row" gap={3} alignItems="flex-start">
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Breadcrumbs sx={{ mb: 2 }}><MuiLink component={Link} href="/" underline="hover" color="inherit">プロジェクト</MuiLink><Typography color="text.primary">詳細</Typography></Breadcrumbs>
+          <Stack component="header" direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2} sx={{ mb: 3 }}>
+            <Box><Stack direction="row" spacing={1} alignItems="center" sx={{ mb: .5 }}><Chip label={statusMeta.label} color={statusMeta.color} size="small" /><Typography variant="caption" color="text.secondary">LIVE</Typography></Stack><Typography variant="h1">{project.title}</Typography><Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}><CalendarTodayRoundedIcon sx={{ fontSize: 16, color: "text.secondary" }} /><Typography variant="body2" color="text.secondary">期日 {deadlineLabel}</Typography></Stack></Box>
+            <Button component={Link} href="/" variant="outlined" startIcon={<ArrowBackRoundedIcon />} sx={{ alignSelf: { md: "flex-start" } }}>一覧へ戻る</Button>
+          </Stack>
+
+          <Alert severity={statusMeta.color} action={currentStatus !== "green" ? <Button color="inherit" size="small" startIcon={<AutoAwesomeRoundedIcon />} onClick={() => setPanelMode(currentStatus)}>AIに相談</Button> : undefined} sx={{ mb: 2.5 }}>{statusMeta.message}</Alert>
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 2, mb: 2.5 }}>
+            <Card><CardContent><Typography variant="caption" color="text.secondary">バッファ残存率</Typography><Stack direction="row" alignItems="end" spacing={1}><Typography variant="h4" fontWeight={800}>{Math.round(status.bufferPercentage)}%</Typography><Typography variant="body2" color="text.secondary" sx={{ pb: .4 }}>余裕</Typography></Stack><LinearProgress color={statusMeta.color} variant="determinate" value={Math.max(0, Math.min(status.bufferPercentage, 100))} sx={{ mt: 1.5, height: 6, borderRadius: 4 }} /></CardContent></Card>
+            <Card><CardContent><Typography variant="caption" color="text.secondary">期日まで</Typography><Typography variant="h4" fontWeight={800}>{daysLeft}<Typography component="span" variant="body2" color="text.secondary"> 日</Typography></Typography><Typography variant="caption" color="text.secondary">残り {Math.max(0, Math.round(status.remainingTime))} 時間</Typography></CardContent></Card>
+            <Card><CardContent><Typography variant="caption" color="text.secondary">未完了の工数</Typography><Typography variant="h4" fontWeight={800}>{status.remainingHours.toFixed(1)}<Typography component="span" variant="body2" color="text.secondary"> 時間</Typography></Typography><Typography variant="caption" color="text.secondary">安全係数 1.2 を別途考慮</Typography></CardContent></Card>
+          </Box>
+
+          <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 2.5 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}><Box><Typography variant="h2">逆算ガント</Typography><Typography variant="body2" color="text.secondary">工数比率を期日までの時間軸へ割り当てた実行順です。</Typography></Box><Chip label={`${project.subtasks.length} タスク`} size="small" variant="outlined" /></Stack>
+            <ProjectGantt subtasks={taskForMonitoring.subtasks} createdAt={project.createdAt} deadline={project.deadline} />
+          </Paper>
 
           <MonitoringPhase
             task={taskForMonitoring}
             onToggleSubtask={handleToggleSubtask}
             onOpenPanel={(mode) => setPanelMode(mode)}
           />
-        </div>
+        </Box>
 
         {panelMode !== "none" && (
           <RightPanel
@@ -193,7 +210,8 @@ export default function ProjectDetailPage() {
             onAddHistory={handleAddHistory}
           />
         )}
-      </div>
-    </main>
+        </Stack>
+      </Container>
+    </Box>
   );
 }

@@ -1,4 +1,7 @@
-// 📊 APIから返ってくるJSONの型定義
+import { Alert, Box, Button, Card, CardContent, Chip, List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+
 type ProposalData = {
   title: string;
   totalEstimatedHours: number;
@@ -17,44 +20,18 @@ export default function PlanningPhase({
   onReject: () => void; 
 }) {
   return (
-    <section className="bg-blue-50 p-6 rounded-xl border border-blue-200 animate-fade-in">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h2 className="text-lg font-bold text-blue-900">AIが逆算計画を作成しました</h2>
-          <p className="text-sm text-blue-700 mt-1">
-            20%のバッファ（{proposal.bufferHours}時間）を確保し、実質総工数を再設定しました。
-          </p>
-        </div>
-        <div className="text-right bg-white p-3 rounded shadow-sm border border-blue-100 text-sm">
-          <p className="text-gray-500 mb-1">想定工数: {proposal.totalEstimatedHours}h</p>
-          <p className="font-bold text-blue-700 text-base border-t pt-1">
-            実質総工数: {proposal.effectiveTotalHours}h
-          </p>
-        </div>
-      </div>
-      
-      {/* 🌟 AIが考えたサブタスクをループで表示 */}
-      <ul className="bg-white rounded-lg border border-blue-100 divide-y divide-gray-100 mb-4">
+    <Card component="section"><CardContent sx={{ p: { xs: 2.5, md: 3.5 }, "&:last-child": { pb: { xs: 2.5, md: 3.5 } } }}>
+      <Alert severity="success" sx={{ mb: 3 }}>AIが期日から逆算した計画を作成しました。開始前にタスクと工数を確認してください。</Alert>
+      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2} sx={{ mb: 2.5 }}>
+        <Box><Typography variant="overline" color="primary" fontWeight={800}>PLAN REVIEW</Typography><Typography variant="h2">{proposal.title}</Typography><Typography variant="body2" color="text.secondary">20%の安全係数を含む実行プランです。</Typography></Box>
+        <Stack direction="row" spacing={1}><Chip label={`見積 ${proposal.totalEstimatedHours}h`} variant="outlined" /><Chip label={`安全係数込み ${proposal.effectiveTotalHours}h`} color="primary" /></Stack>
+      </Stack>
+      <List sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, overflow: "hidden", mb: 3 }} disablePadding>
         {proposal.subtasks.map((sub, index) => (
-          <li key={index} className="p-3 flex justify-between hover:bg-gray-50 transition-colors">
-            <span className="font-bold text-gray-800">
-              {index + 1}. {sub.title}
-            </span>
-            <span className="text-gray-500 text-sm font-bold bg-gray-100 px-2 py-1 rounded">
-              {sub.estimatedHours}h
-            </span>
-          </li>
+          <ListItem key={index} divider={index < proposal.subtasks.length - 1}><Chip label={index + 1} size="small" sx={{ mr: 2 }} /><ListItemText primary={sub.title} slotProps={{ primary: { fontWeight: 650 } }} /><Typography variant="body2" color="text.secondary">{sub.estimatedHours}h</Typography></ListItem>
         ))}
-      </ul>
-
-      <div className="flex gap-4">
-        <button onClick={onApprove} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-colors">
-          この計画で開始する (承認)
-        </button>
-        <button onClick={onReject} className="px-6 py-3 bg-white border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-          修正してやり直す
-        </button>
-      </div>
-    </section>
+      </List>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}><Button onClick={onApprove} variant="contained" size="large" startIcon={<CheckRoundedIcon />} sx={{ flex: 1 }}>この計画で開始する</Button><Button onClick={onReject} variant="outlined" size="large" startIcon={<ReplayRoundedIcon />}>入力を見直す</Button></Stack>
+    </CardContent></Card>
   );
 }
