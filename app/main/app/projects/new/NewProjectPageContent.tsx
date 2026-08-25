@@ -28,6 +28,10 @@ export default function NewProjectPageContent() {
   }, [searchParams]);
 
   const generateWBS = async (name: string, date: string) => {
+    if (!date) {
+      setError("期日を選択してください");
+      return;
+    }
     setTaskName(name);
     setDeadline(date);
     setError("");
@@ -57,6 +61,10 @@ export default function NewProjectPageContent() {
 
   const handleApprove = async () => {
     if (!aiProposal) return;
+    if (!deadline) {
+      setError("期日が設定されていないため保存できません");
+      return;
+    }
 
     try {
       const res = await fetch("/api/projects", {

@@ -22,7 +22,7 @@ export default function IntakePhase({
   }, [initialTaskName, initialDeadline]);
 
   const handleSubmit = () => {
-    if (!taskName.trim()) return;
+    if (!taskName.trim() || !deadline) return;
     onNext(taskName.trim(), deadline);
   };
 
@@ -52,7 +52,7 @@ export default function IntakePhase({
         />
         <button
           onClick={handleSubmit}
-          disabled={!taskName.trim()}
+          disabled={!taskName.trim() || !deadline}
           className="bg-black text-white px-6 py-3 rounded-lg font-bold disabled:bg-gray-400 hover:bg-gray-800 transition-colors"
         >
           AIに計画させる
