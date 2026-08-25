@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import IntakePhase from "@/components/IntakePhase";
 import PlanningPhase from "@/components/PlanningPhase";
 import type { AIProposal } from "@/lib/types";
-import { Alert, Box, Breadcrumbs, CircularProgress, Container, Link as MuiLink, Stack, Typography } from "@mui/material";
+import { Alert, Box, CircularProgress, Container, Stack, Typography } from "@mui/material";
 
 export default function NewProjectPageContent() {
   const router = useRouter();
@@ -18,6 +17,7 @@ export default function NewProjectPageContent() {
   const [taskName, setTaskName] = useState("");
   const [deadline, setDeadline] = useState("");
   const [error, setError] = useState("");
+  const autoGenerateStarted = useRef(false);
 
   useEffect(() => {
     const taskParam = searchParams.get("task") ?? "";
@@ -60,6 +60,15 @@ export default function NewProjectPageContent() {
     }
   };
 
+  useEffect(() => {
+    const taskParam = searchParams.get("task")?.trim() ?? "";
+    const deadlineParam = searchParams.get("deadline") ?? "";
+    if (taskParam && deadlineParam && !autoGenerateStarted.current) {
+      autoGenerateStarted.current = true;
+      void generateWBS(taskParam, deadlineParam);
+    }
+  }, [searchParams]);
+
   const handleApprove = async () => {
     if (!aiProposal) return;
     if (!deadline) {
@@ -92,7 +101,6 @@ export default function NewProjectPageContent() {
 
   return (
     <Box component="main" sx={{ minHeight: "100vh", py: { xs: 3, md: 5 } }}><Container maxWidth="md">
-        <Breadcrumbs sx={{ mb: 2 }}><MuiLink component={Link} href="/" underline="hover" color="inherit">プロジェクト</MuiLink><Typography color="text.primary">新規作成</Typography></Breadcrumbs>
         <Box component="header" sx={{ mb: 3 }}><Typography variant="h1">新しいプロジェクト</Typography><Typography color="text.secondary" sx={{ mt: .5 }}>目標と期日を決め、AIの逆算プランをレビューして開始します。</Typography></Box>
 
         {error && (

@@ -47,7 +47,10 @@ GET /api/projects?page=1&per_page=20
 1. $E_{plan} = E_{total} \times 1.2$
 2. $B_{init} = T_{init} - E_{plan}$
 3. $B_{current} = T_{current} - (E_{remain} \times 1.2)$
-4. $BufferRate = (B_{current} / B_{init}) \times 100$
+4. $B_{base} = \max(B_{init}, E_{plan} \times 0.2, 1)$
+5. $BufferRate = (B_{current} / B_{base}) \times 100$
+
+`B_base` は表示の安定化に使う基準幅（時間）である。初期バッファが0または極端に小さい計画でも、わずかな工数変更によって残存率が0%から100%へ不連続に変化しないよう、初期計画工数の20%または1時間を下限とする。上限は100%とし、負の値は切り捨てず危機の度合いとしてそのまま返す。
 
 ステータス閾値:
 
@@ -571,6 +574,4 @@ AI に目標（メインタスク）と絶対期日を渡し、サブタスク�
 - 工数（`estimatedHours` 等）は小数を含む数値（時間）を扱う。
 - 認証を導入する場合、`POST /api/projects` 等の更新系を「要」に変更し、`401 Unauthorized` を返す。
 - 現状の実装 (`app/main/app/api/generate/route.ts`) は `/api/generate` のみを提供している。本仕様は `docs/database.md`・`docs/design.md`・`docs/要件定義書.md` を基に、SQLite 等で永続化した際の API 像として定義している。
-
-
 

@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import IntakePhase from "@/components/IntakePhase";
 import ProjectCard from "@/components/ProjectCard";
 import type { ProjectSummary } from "@/lib/types";
-import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from "@mui/material";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Alert, Box, CircularProgress, Container, Stack, Typography } from "@mui/material";
 
 export default function Home() {
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const sortedProjects = useMemo(() => {
+    const order = { red: 0, yellow: 1, green: 2 } as const;
+    return [...projects].sort((a, b) => order[a.status] - order[b.status] || new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+  }, [projects]);
 
   const fetchProjects = async () => {
     try {
@@ -45,16 +47,11 @@ export default function Home() {
   };
 
   return (
-    <Box component="main" sx={{ minHeight: "100vh", py: { xs: 3, md: 5 } }}>
+    <Box component="main" sx={{ minHeight: "100vh" }}>
       <Container maxWidth="lg">
-        <Stack component="header" direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "flex-end" }} spacing={2} sx={{ mb: 3.5 }}>
-          <Box><Typography variant="overline" color="primary" fontWeight={800}>AI-DRIVEN REVERSE SCHEDULER</Typography><Typography variant="h1">締切から、仕事を設計する。</Typography><Typography color="text.secondary" sx={{ mt: .75 }}>余裕を可視化し、間に合わないときはAIとスコープを削る。</Typography></Box>
-          <Button component={Link} href="/projects/new" variant="contained" startIcon={<AddRoundedIcon />}>新規プロジェクト</Button>
-        </Stack>
+        <Box sx={{ minHeight: { xs: "calc(100vh - 64px)", md: "100vh" }, display: "flex", alignItems: "center", py: 3 }}><Box sx={{ width: "100%" }}><IntakePhase onNext={handleStartNewProject} /></Box></Box>
 
-        <IntakePhase onNext={handleStartNewProject} />
-
-        <Box component="section" sx={{ mt: 5 }}>
+        <Box component="section" sx={{ pb: 6 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="end" sx={{ mb: 2 }}><Box><Typography variant="h2">進行中のプロジェクト</Typography><Typography variant="body2" color="text.secondary">危機状態のプロジェクトから確認してください。</Typography></Box><Typography variant="body2" color="text.secondary">{projects.length} 件</Typography></Stack>
 
           {loading ? (
@@ -65,7 +62,7 @@ export default function Home() {
             <Box sx={{ p: 5, bgcolor: "background.paper", border: "1px dashed #cbd2df", borderRadius: 3, textAlign: "center" }}><Typography fontWeight={700}>まだプロジェクトがありません</Typography><Typography variant="body2" color="text.secondary">上のフォームに最初のゴールを入力してください。</Typography></Box>
           ) : (
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
-              {projects.map((project) => (
+              {sortedProjects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
             </Box>

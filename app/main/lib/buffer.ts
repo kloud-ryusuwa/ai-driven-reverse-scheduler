@@ -23,14 +23,10 @@ export function calculateBufferStatus(record: ProjectRecord, now = new Date()): 
   const ePlan = record.initialTotalHours * 1.2;
   const bInit = record.initialRemainingTime - ePlan;
   const bCurrent = remainingTime - remHours * 1.2;
-
-  let bufferPercentage: number;
-  if (bInit > 0) {
-    bufferPercentage = Math.round((bCurrent / bInit) * 100);
-  } else {
-    // 計画時点で既に猶予がない場合は 0%（red）とする
-    bufferPercentage = bCurrent > 0 ? 100 : 0;
-  }
+  // 初期バッファがゼロ付近だと、わずかな工数変更を極端な割合へ
+  // 増幅してしまう。計画工数の20%（最低1時間）を安定化幅として使う。
+  const stableBufferBase = Math.max(bInit, ePlan * 0.2, 1);
+  const bufferPercentage = Math.min(100, Math.round((bCurrent / stableBufferBase) * 100));
 
   const status = getStatusFromBuffer(bufferPercentage);
 

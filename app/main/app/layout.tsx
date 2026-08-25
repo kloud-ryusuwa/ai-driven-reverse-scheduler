@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppThemeProvider from "@/components/AppThemeProvider";
+import AppShell from "@/components/AppShell";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 
 export const metadata: Metadata = {
   title: "AI-Driven Reverse Scheduler",
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
-      <body><AppThemeProvider>{children}</AppThemeProvider></body>
+      <body><AppRouterCacheProvider><AppThemeProvider><AppShell>{children}</AppShell></AppThemeProvider></AppRouterCacheProvider></body>
     </html>
   );
 }

@@ -2,15 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import MonitoringPhase from "@/components/MonitoringPhase";
 import RightPanel from "@/components/RightPanel";
 import type { MainTask } from "@/types/task";
 import type { BufferStatus, History, Project, TriageProposal } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
 import ProjectGantt from "@/components/ProjectGantt";
-import { Alert, Box, Breadcrumbs, Button, Card, CardContent, Chip, CircularProgress, Container, LinearProgress, Link as MuiLink, Paper, Stack, Typography } from "@mui/material";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Container, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 
@@ -74,6 +72,16 @@ export default function ProjectDetailPage() {
       body: JSON.stringify({ isDone }),
     });
     if (!res.ok) return;
+    await loadAll();
+  };
+
+  const handleResizeSubtask = async (subtaskId: string, estimatedHours: number) => {
+    const res = await fetch(`/api/projects/${id}/subtasks/${subtaskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estimatedHours }),
+    });
+    if (!res.ok) throw new Error("所要時間の更新に失敗しました");
     await loadAll();
   };
 
@@ -173,10 +181,8 @@ export default function ProjectDetailPage() {
       <Container maxWidth="xl">
         <Stack direction="row" gap={3} alignItems="flex-start">
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Breadcrumbs sx={{ mb: 2 }}><MuiLink component={Link} href="/" underline="hover" color="inherit">プロジェクト</MuiLink><Typography color="text.primary">詳細</Typography></Breadcrumbs>
           <Stack component="header" direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2} sx={{ mb: 3 }}>
             <Box><Stack direction="row" spacing={1} alignItems="center" sx={{ mb: .5 }}><Chip label={statusMeta.label} color={statusMeta.color} size="small" /><Typography variant="caption" color="text.secondary">LIVE</Typography></Stack><Typography variant="h1">{project.title}</Typography><Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}><CalendarTodayRoundedIcon sx={{ fontSize: 16, color: "text.secondary" }} /><Typography variant="body2" color="text.secondary">期日 {deadlineLabel}</Typography></Stack></Box>
-            <Button component={Link} href="/" variant="outlined" startIcon={<ArrowBackRoundedIcon />} sx={{ alignSelf: { md: "flex-start" } }}>一覧へ戻る</Button>
           </Stack>
 
           <Alert severity={statusMeta.color} action={currentStatus !== "green" ? <Button color="inherit" size="small" startIcon={<AutoAwesomeRoundedIcon />} onClick={() => setPanelMode(currentStatus)}>AIに相談</Button> : undefined} sx={{ mb: 2.5 }}>{statusMeta.message}</Alert>
@@ -188,8 +194,8 @@ export default function ProjectDetailPage() {
           </Box>
 
           <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 2.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}><Box><Typography variant="h2">逆算ガント</Typography><Typography variant="body2" color="text.secondary">工数比率を期日までの時間軸へ割り当てた実行順です。</Typography></Box><Chip label={`${project.subtasks.length} タスク`} size="small" variant="outlined" /></Stack>
-            <ProjectGantt subtasks={taskForMonitoring.subtasks} createdAt={project.createdAt} deadline={project.deadline} />
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}><Box><Typography variant="h2">逆算ガント</Typography><Typography variant="body2" color="text.secondary">右端のハンドルをドラッグすると所要時間を変更できます。</Typography></Box><Chip label={`${project.subtasks.length} タスク`} size="small" variant="outlined" /></Stack>
+            <ProjectGantt subtasks={taskForMonitoring.subtasks} createdAt={project.createdAt} deadline={project.deadline} onResize={handleResizeSubtask} />
           </Paper>
 
           <MonitoringPhase
