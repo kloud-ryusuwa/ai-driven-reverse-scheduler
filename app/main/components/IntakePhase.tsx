@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Card, CardContent, Stack, TextField, Typography } from "@mui/material";
+import { Button, Card, CardContent, Stack, TextField, Typography } from "@mui/material";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 
 type IntakePhaseProps = {
@@ -37,13 +37,12 @@ export default function IntakePhase({
   return (
     <Card component="section">
       <CardContent sx={{ p: { xs: 2.5, md: 3.5 }, "&:last-child": { pb: { xs: 2.5, md: 3.5 } } }}>
-      <Typography variant="overline" color="primary" fontWeight={800}>START FROM THE DEADLINE</Typography>
-      <Typography variant="h2" sx={{ mb: .5 }}>ゴールから逆算して、今日の一歩を決める</Typography>
-      <Typography color="text.secondary" sx={{ mb: 2.5 }}>目標と絶対期日だけで、AIが余裕を含む実行計画を組み立てます。</Typography>
+      <Typography variant="h2" sx={{ mb: .5 }}>何を、いつまでに完了しますか？</Typography>
+      <Typography color="text.secondary" sx={{ mb: 2.5 }}>入力内容からタスクと所要時間を作成します。</Typography>
       <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
         <TextField
           fullWidth
-          label="達成したいゴール"
+          label="完了したいこと"
           type="text"
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
@@ -51,7 +50,7 @@ export default function IntakePhase({
           placeholder="例：金曜のデモを完成させる"
         />
         <TextField
-          label="絶対期日"
+          label="期日"
           type="date"
           value={deadline}
           onChange={(e) => setDeadline(e.target.value)}
@@ -69,7 +68,6 @@ export default function IntakePhase({
           逆算プランを作る
         </Button>
       </Stack>
-      <Box sx={{ mt: 2, color: "text.secondary", fontSize: 12 }}>20%の安全係数を含めて見積もります。作成後に内容を確認できます。</Box>
       </CardContent>
     </Card>
   );

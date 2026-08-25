@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { getDemoSettings } from '@/lib/demo';
 
 function getOpenAI() {
   return new OpenAI({
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
 
     // 🌸 モデル名をさくらのものに指定
     const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-oss-120b', // llm-jp-3.1-8x13b-instruct4 に変更してもOKです
+      model: getDemoSettings().model,
       messages: [{ role: 'user', content: prompt }],
       // 互換APIによっては response_format でエラーになることがあるため、
       // 今回はプロンプトの指示（JSON以外のテキストは出力しない）に頼る形にしています。

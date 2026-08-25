@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { hoursUntilDeadline } from "./buffer";
 import { toProjectSummary } from "./buffer";
 import type { Evaluation, History, ProjectRecord, SubTask } from "./types";
+import { getDemoNow } from "./demo";
 
 declare global {
   var __ADS_STORE:
@@ -28,14 +29,15 @@ export function createProject(input: {
   initialTotalHours: number;
   subtasks: { title: string; estimatedHours: number }[];
 }): ProjectRecord {
-  const now = new Date().toISOString();
+  const demoNow = getDemoNow();
+  const now = demoNow.toISOString();
   const projectId = generateId("proj");
 
   const project: ProjectRecord = {
     id: projectId,
     title: input.title,
     deadline: input.deadline,
-    initialRemainingTime: hoursUntilDeadline(input.deadline),
+    initialRemainingTime: hoursUntilDeadline(input.deadline, demoNow),
     initialTotalHours: input.initialTotalHours,
     subtasks: input.subtasks.map((s) => ({
       id: generateId("sub"),
@@ -81,7 +83,7 @@ export function updateProject(
     );
   }
 
-  project.updatedAt = new Date().toISOString();
+  project.updatedAt = getDemoNow().toISOString();
   return project;
 }
 
@@ -124,7 +126,7 @@ export function createSubtask(
   };
 
   project.subtasks.push(subtask);
-  project.updatedAt = new Date().toISOString();
+  project.updatedAt = getDemoNow().toISOString();
   return subtask;
 }
 
@@ -144,7 +146,7 @@ export function updateSubtask(
     subtask.estimatedHours = patch.estimatedHours;
   if (patch.isDone !== undefined) subtask.isDone = patch.isDone;
 
-  project.updatedAt = new Date().toISOString();
+  project.updatedAt = getDemoNow().toISOString();
   return subtask;
 }
 
@@ -156,7 +158,7 @@ export function deleteSubtask(projectId: string, subtaskId: string): boolean {
   project.subtasks = project.subtasks.filter((s) => s.id !== subtaskId);
   const deleted = project.subtasks.length < before;
   if (deleted) {
-    project.updatedAt = new Date().toISOString();
+    project.updatedAt = getDemoNow().toISOString();
   }
   return deleted;
 }
@@ -178,7 +180,7 @@ export function createHistory(
   const history: History = {
     id: generateId("hist"),
     projectId,
-    timestamp: new Date().toISOString(),
+    timestamp: getDemoNow().toISOString(),
     content,
   };
 

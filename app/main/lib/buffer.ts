@@ -1,5 +1,6 @@
 import { getStatusFromBuffer } from "@/utils/calculations";
 import type { BufferStatus, Project, ProjectRecord, ProjectSummary, SubTask } from "./types";
+import { getDemoNow } from "./demo";
 
 export function parseDeadline(deadline: string): Date {
   // YYYY-MM-DD を UTC 0時として扱う
@@ -16,7 +17,7 @@ export function remainingHours(subtasks: SubTask[]): number {
   return subtasks.filter((s) => !s.isDone).reduce((sum, s) => sum + s.estimatedHours, 0);
 }
 
-export function calculateBufferStatus(record: ProjectRecord, now = new Date()): BufferStatus {
+export function calculateBufferStatus(record: ProjectRecord, now = getDemoNow()): BufferStatus {
   const remainingTime = hoursUntilDeadline(record.deadline, now);
   const remHours = remainingHours(record.subtasks);
 

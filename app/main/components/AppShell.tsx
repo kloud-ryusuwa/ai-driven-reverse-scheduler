@@ -8,6 +8,8 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import type { ProjectSummary, TaskStatus } from "@/lib/types";
+import DemoControls from "@/components/DemoControls";
+import NewProjectDialog from "@/components/NewProjectDialog";
 
 const drawerWidth = 264;
 const order: Record<TaskStatus, number> = { red: 0, yellow: 1, green: 2 };
@@ -21,6 +23,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/projects")
@@ -38,8 +41,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <Stack sx={{ height: "100%" }}>
       <Box sx={{ p: 2.5 }}><Typography fontWeight={850} letterSpacing="-.03em">Reverse Scheduler</Typography></Box>
       <Box sx={{ px: 1.5 }}>
-        <ListItemButton component={Link} href="/" selected={pathname === "/"} onClick={() => setOpen(false)} sx={{ borderRadius: 2 }}><DashboardRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} /><ListItemText primary="プロジェクト一覧" slotProps={{ primary: { fontWeight: 700, fontSize: 14 } }} /></ListItemButton>
-        <Button component={Link} href="/projects/new" fullWidth variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setOpen(false)} sx={{ mt: 1.5 }}>新規プロジェクト</Button>
+        <ListItemButton component={Link} href="/" selected={pathname === "/"} onClick={() => setOpen(false)} sx={{ borderRadius: 2 }}><DashboardRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} /><ListItemText primary="ダッシュボード" slotProps={{ primary: { fontWeight: 700, fontSize: 14 } }} /></ListItemButton>
+        <Button fullWidth variant="contained" startIcon={<AddRoundedIcon />} onClick={() => { setOpen(false); setNewProjectOpen(true); }} sx={{ mt: 1.5 }}>新規プロジェクト</Button>
       </Box>
       <Divider sx={{ my: 2 }} />
       <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ px: 2.5, mb: .75 }}>プロジェクト</Typography>
@@ -60,6 +63,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Drawer variant="permanent" open slotProps={{ paper: { sx: { display: { xs: "none", md: "block" }, width: drawerWidth, borderRightColor: "divider" } } }} sx={{ display: { xs: "none", md: "block" } }}>{navigation}</Drawer>
       <Drawer variant="temporary" open={open} onClose={() => setOpen(false)} slotProps={{ paper: { sx: { width: drawerWidth, borderRightColor: "divider" } } }} sx={{ display: { xs: "block", md: "none" } }}>{navigation}</Drawer>
       <Box sx={{ ml: { xs: 0, md: `${drawerWidth}px` } }}>{children}</Box>
+      <DemoControls />
+      <NewProjectDialog open={newProjectOpen} onClose={() => setNewProjectOpen(false)} />
     </Box>
   );
 }

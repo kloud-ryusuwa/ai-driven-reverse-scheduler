@@ -187,6 +187,34 @@ GET /api/projects?page=1&per_page=20
 
 ## エンドポイント一覧
 
+### デモ設定
+
+ハッカソンでのデモ専用機能。設定は単一のアプリケーションプロセス内で共有され、プロセスを再起動すると初期値へ戻る。
+
+| Method | Path | 説明 |
+|---|---|---|
+| GET | `/api/demo-settings` | 現在の日時・モデル設定とOpenAI互換APIのモデル一覧を取得 |
+| PATCH | `/api/demo-settings` | デモ用の現在日時・利用モデルを変更 |
+
+```json
+// GET Response 200
+{
+  "now": "2026-08-25T12:00:00.000Z",
+  "model": "gpt-oss-120b",
+  "models": ["gpt-oss-120b", "llm-jp-3.1-8x13b-instruct4"]
+}
+```
+
+`now`を`null`にすると実際の現在日時を使用する。モデル一覧を取得できない場合は、現在選択中のモデルだけを返す。
+
+```json
+// PATCH Request
+{
+  "now": "2026-08-26T09:00:00.000Z",
+  "model": "gpt-oss-120b"
+}
+```
+
 ### AI / WBS 生成
 
 | Method | Path | 説明 | 認証 |
@@ -574,4 +602,3 @@ AI に目標（メインタスク）と絶対期日を渡し、サブタスク�
 - 工数（`estimatedHours` 等）は小数を含む数値（時間）を扱う。
 - 認証を導入する場合、`POST /api/projects` 等の更新系を「要」に変更し、`401 Unauthorized` を返す。
 - 現状の実装 (`app/main/app/api/generate/route.ts`) は `/api/generate` のみを提供している。本仕様は `docs/database.md`・`docs/design.md`・`docs/要件定義書.md` を基に、SQLite 等で永続化した際の API 像として定義している。
-
