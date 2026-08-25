@@ -230,12 +230,26 @@ AI に目標（メインタスク）と絶対期日を渡し、サブタスク�
 |---|---|---|
 | taskName | string | **必須**。最終目標 |
 | deadline | string | 絶対期日（`YYYY-MM-DD`）。省略可 |
+| feedback | string | 計画を再生成するときの修正指示。省略可 |
+| currentProposal | AIProposal | 修正対象となる現在の計画。`feedback`指定時に使用 |
 
 ```json
 // Request
 {
   "taskName": "プレゼン資料作成",
   "deadline": "2026-09-10"
+}
+```
+
+生成済み計画を修正する場合も同じエンドポイントを利用する。
+
+```json
+// Revision Request
+{
+  "taskName": "プレゼン資料作成",
+  "deadline": "2026-09-10",
+  "feedback": "レビューを2時間にして、発表練習を追加して",
+  "currentProposal": { "title": "プレゼン資料作成", "subtasks": [] }
 }
 ```
 

@@ -28,7 +28,7 @@ export default function NewProjectPageContent() {
     setDeadline(deadlineParam);
   }, [searchParams]);
 
-  const generateWBS = async (name: string, date: string) => {
+  const generateWBS = async (name: string, date: string, feedback?: string, currentProposal?: AIProposal) => {
     if (!date) {
       setError("期日を選択してください");
       return;
@@ -42,7 +42,7 @@ export default function NewProjectPageContent() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskName: name, deadline: date }),
+        body: JSON.stringify({ taskName: name, deadline: date, feedback, currentProposal }),
       });
       const data = await res.json();
 
@@ -124,6 +124,7 @@ export default function NewProjectPageContent() {
             proposal={aiProposal}
             onApprove={handleApprove}
             onReject={() => setPhase("intake")}
+            onRevise={(instruction) => generateWBS(taskName, deadline, instruction, aiProposal)}
           />
         )}
     </Container></Box>

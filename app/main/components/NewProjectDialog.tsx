@@ -12,13 +12,14 @@ export default function NewProjectDialog({ open, onClose }: { open: boolean; onC
   const router = useRouter();
   const [proposal, setProposal] = useState<AIProposal | null>(null);
   const [deadline, setDeadline] = useState("");
+  const [taskName, setTaskName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const reset = () => { setProposal(null); setDeadline(""); setError(""); onClose(); };
-  const generate = async (taskName: string, date: string) => {
-    setDeadline(date); setLoading(true); setError("");
+  const reset = () => { setProposal(null); setDeadline(""); setTaskName(""); setError(""); onClose(); };
+  const generate = async (name: string, date: string, feedback?: string, currentProposal?: AIProposal) => {
+    setTaskName(name); setDeadline(date); setLoading(true); setError("");
     try {
-      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskName, deadline: date }) });
+      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskName: name, deadline: date, feedback, currentProposal }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "計画を作成できませんでした");
       setProposal(data);
@@ -40,7 +41,7 @@ export default function NewProjectDialog({ open, onClose }: { open: boolean; onC
     <DialogContent sx={{ pb: 3 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {loading ? <Stack alignItems="center" spacing={2} sx={{ py: 8 }}><CircularProgress /><Typography color="text.secondary">AIが計画を作成しています</Typography></Stack>
-        : proposal ? <PlanningPhase proposal={proposal} onApprove={approve} onReject={() => setProposal(null)} />
+        : proposal ? <PlanningPhase proposal={proposal} onApprove={approve} onReject={() => setProposal(null)} onRevise={(instruction) => generate(taskName, deadline, instruction, proposal)} />
           : <IntakePhase onNext={generate} />}
     </DialogContent>
   </Dialog>;

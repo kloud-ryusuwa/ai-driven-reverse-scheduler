@@ -12,7 +12,7 @@ function getOpenAI() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { taskName, deadline } = body;
+    const { taskName, deadline, feedback, currentProposal } = body;
 
     if (!taskName) {
       return NextResponse.json({ error: 'タスク名が入力されていません' }, { status: 400 });
@@ -26,6 +26,14 @@ export async function POST(req: Request) {
     【入力情報】
     - メインタスク: ${taskName}
     - 絶対期日: ${deadline || '指定なし'}
+    ${feedback ? `
+    【現在の計画】
+    ${JSON.stringify(currentProposal)}
+
+    【ユーザーからの修正指示】
+    ${feedback}
+
+    現在の計画を土台に、修正指示をすべて反映して再作成してください。` : ""}
 
     以下のJSONフォーマットで返却してください。JSON以外のテキストは一切出力しないでください。
     {

@@ -34,7 +34,7 @@ export default function DemoControls() {
       <Stack spacing={2}>
         {message && <Alert severity={message === "反映しました" ? "success" : "error"}>{message}</Alert>}
         <TextField label="現在日時" type="datetime-local" value={now} onChange={(event) => setNow(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} helperText="空欄にすると実際の現在日時を使用" />
-        <TextField select label="AIモデル" value={model} onChange={(event) => setModel(event.target.value)}>{models.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField>
+        <TextField select label="AIモデル" value={model} onChange={(event) => setModel(event.target.value)} slotProps={{ select: { MenuProps: { disablePortal: true } } }}>{models.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField>
         <Button variant="contained" onClick={save} disabled={!model}>適用</Button>
       </Stack>
     </Paper>}
