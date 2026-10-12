@@ -26,6 +26,18 @@ export type Project = ProjectSummary & {
   updatedAt: string;
 };
 
+/** UI 監視画面で使うプロジェクト表現（Project から派生したビュー） */
+export type MainTask = {
+  id: string;
+  title: string;
+  deadline: string;
+  bufferPercentage: number;
+  completedSubtasks: number;
+  totalSubtasks: number;
+  subtasks: SubTask[];
+  extraSubtasksCount?: number;
+};
+
 /** 永続化用の生データ（status/bufferPercentage は都度計算） */
 export type ProjectRecord = {
   id: string;

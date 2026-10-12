@@ -201,6 +201,8 @@ export function createEvaluation(
     comment?: string;
   }
 ): Evaluation | undefined {
+  if (!getHistory(historyId)) return undefined;
+
   const existingIndex = store.evaluations.findIndex(
     (e) => e.historyId === historyId
   );

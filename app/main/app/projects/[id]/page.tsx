@@ -4,8 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import MonitoringPhase from "@/components/MonitoringPhase";
 import RightPanel from "@/components/RightPanel";
-import type { MainTask } from "@/types/task";
-import type { BufferStatus, History, Project, TriageProposal } from "@/lib/types";
+import type { BufferStatus, History, MainTask, Project, TriageProposal } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
 import ProjectGantt from "@/components/ProjectGantt";
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Container, LinearProgress, Paper, Stack, Typography } from "@mui/material";
@@ -163,6 +162,7 @@ export default function ProjectDetailPage() {
     totalSubtasks: project.subtasks.length,
     subtasks: project.subtasks.map((s) => ({
       id: s.id,
+      projectId: project.id,
       title: s.title,
       isDone: s.isDone,
       estimatedHours: s.estimatedHours,

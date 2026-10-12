@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { MainTask } from "../types/task";
-import type { History, TriageProposal } from "../lib/types";
+import type { History, MainTask, TriageProposal } from "@/lib/types";
 
 type RightPanelProps = {
   mode: "yellow" | "red";

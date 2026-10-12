@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Box, Stack, Tooltip, Typography } from "@mui/material";
-import type { SubTask } from "@/types/task";
+import type { SubTask } from "@/lib/types";
 
 type Props = {
   subtasks: SubTask[];

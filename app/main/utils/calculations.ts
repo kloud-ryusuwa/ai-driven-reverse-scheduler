@@ -1,5 +1,5 @@
 // utils/calculations.ts
-import { MainTask, TaskStatus } from "../types/task";
+import { MainTask, TaskStatus } from "@/lib/types";
 
 /**
  * 🌟 バッファ残量からステータス（信号の色）を判定する関数

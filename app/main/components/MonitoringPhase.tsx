@@ -1,9 +1,9 @@
-import { MainTask } from "../types/task";
-import { getStatusFromBuffer } from "../utils/calculations";
+import { MainTask } from "@/lib/types";
+import { getStatusFromBuffer } from "@/utils/calculations";
 import { Box, Button, Checkbox, Chip, LinearProgress, List, ListItem, ListItemButton, ListItemText, Paper, Stack, Typography } from "@mui/material";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 
-export type { MainTask } from "../types/task";
+export type { MainTask } from "@/lib/types";
 
 type MonitoringPhaseProps = {
   task: MainTask;
