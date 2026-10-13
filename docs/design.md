@@ -42,8 +42,12 @@ app/main/
 │   ├── api.ts                    # API Route 用ユーティリティ
 │   ├── buffer.ts                 # CCPM バッファ計算
 │   ├── demo.ts                   # デモ用時計・モデル設定
+│   ├── id.ts                     # ID 生成ユーティリティ
 │   ├── pagination.ts             # ページネーション
-│   ├── store.ts                  # インメモリデータストア
+│   ├── repositories/             # Repository 層
+│   │   ├── inMemoryStore.ts      # インメモリ Repository 実装
+│   │   └── types.ts              # Repository インターフェース
+│   ├── store.ts                  # インメモリデータストア（Repository へのファサード）
 │   └── types.ts                  # ドメイン型定義
 ├── tests/                        # 自動テスト
 ├── types/task.ts                 # UI 用レガシー型定義
@@ -288,6 +292,7 @@ npm run test:ui    # UI モード
 - `tests/lib/store.test.ts`
 - `tests/lib/store.history.test.ts`
 - `tests/lib/store.evaluation.test.ts`
+- `tests/repositories/inMemoryStore.test.ts`
 
 ## 開発日記（設計変遷）
 
@@ -314,6 +319,23 @@ npm run test:ui    # UI モード
 - `@mui/icons-material` の package.json 欠落による型解決エラーは `types/mui-icons.d.ts` のフォールバック宣言で回避
 - テスト 8 ファイル / 57 件、および `tsc --noEmit` が通過
 
+### Repository パターンの導入
+
+`lib/store.ts` が直接 `globalThis.__ADS_STORE` にアクセスしていたため、テスト・永続化・並列実行が困難だった。
+Repository 層を導入し、データアクセスを抽象化した。
+
+- `lib/repositories/types.ts` に `IStoreRepository` インターフェースを定義
+  - Project / Subtask / History / Evaluation の CRUD を一元的に宣言
+- `lib/repositories/inMemoryStore.ts` に `InMemoryStoreRepository` を実装
+  - コンストラクタで `{ projects, histories, evaluations }` を受け取り、グローバル状態への直接依存を排除
+  - ID 生成は `lib/id.ts` を利用
+- `lib/store.ts` を Repository の薄いファサードに変更
+  - 既存の API（`createProject`, `getProject`, `listProjects`, ...）はそのまま維持
+  - 内部的にシングルトン `InMemoryStoreRepository` を使用し、既存の `globalThis.__ADS_STORE` と同期
+- `lib/id.ts` を新設し、`generateId` を Repository と `store.ts` で共有
+- `tests/repositories/inMemoryStore.test.ts` を追加し、Repository インスタンス単体での動作を検証
+- テスト 9 ファイル / 61 件、および `tsc --noEmit` が通過
+
 ### 今後の拡張（TODO）
 
 - SQLite 等の永続化層の導入
@@ -335,8 +357,10 @@ npm run test:ui    # UI モード
 
 1. **型定義の重複** ✅ 統合済
    - `lib/types.ts` を single source of truth とし、`types/task.ts` は `@/lib/types` からの再エクスポートレイヤーに変更
-2. **データアクセスとビジネスロジックの混在**
-   - `lib/store.ts` が CRUD、ID 生成、軽微なドメイン計算を兼ねている
+2. **データアクセスとビジネスロジックの混在** ✅ Repository 層で分離済
+   - `lib/store.ts` は Repository へのファサードに縮小
+   - `lib/repositories/` にデータアクセスを集約
+   - 軽微なドメイン計算（`hoursUntilDeadline` 等）は引き続き `lib/buffer.ts` が担当
 3. **グローバル状態への依存**
    - `globalThis.__ADS_STORE` / `globalThis.__ADRS_DEMO_SETTINGS` により、テスト・永続化・並列実行が困難
 4. **API Route の肥大化**
@@ -349,7 +373,7 @@ npm run test:ui    # UI モード
 ## リファクタリングロードマップ
 
 1. 型定義の統合（`lib/types.ts` を正規化）
-2. Repository パターンの導入（`globalThis.__ADS_STORE` をラップ）
+2. ✅ Repository パターンの導入（`globalThis.__ADS_STORE` をラップ）
 3. Clock サービスの DI 化（`getDemoNow()` のグローバル依存を解消）
 4. ドメインサービスの切り出し（ProjectLifecycleService, BufferService, TriageService）
 5. API Route を薄いコントローラーにする
