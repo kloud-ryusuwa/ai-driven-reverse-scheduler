@@ -1,5 +1,5 @@
 import type { AlertColor } from "@mui/material";
-import type { BufferStatus, MainTask, Project } from "./types";
+import type { BufferStatus, MainTask, Project } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
 
 export function toMainTask(project: Project, _status: BufferStatus): MainTask {

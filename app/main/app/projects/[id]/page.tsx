@@ -1,8 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ProjectDetailView from "@/components/ProjectDetailView";
-import { useProjectDetail } from "@/lib/hooks/useProjectDetail";
+import ProjectDetailView from "./components/ProjectDetailView";
+import { useProjectDetail } from "./hooks/useProjectDetail";
 import { Alert, CircularProgress, Container, Stack, Typography } from "@mui/material";
 
 export default function ProjectDetailPage() {

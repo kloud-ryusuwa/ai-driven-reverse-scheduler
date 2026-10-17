@@ -4,7 +4,7 @@ import {
   getDaysLeft,
   getStatusMeta,
   toMainTask,
-} from "@/lib/projectViewModel";
+} from "./projectViewModel";
 import type { BufferStatus, Project } from "@/lib/types";
 
 function makeProject(overrides: Partial<Project> = {}): Project {

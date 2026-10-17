@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { applyTriageProposal, requestTriage } from "@/lib/triage";
+import { applyTriageProposal, requestTriage } from "../hooks/useProjectDetail";
 import type { Project, SubTask, TriageProposal } from "@/lib/types";
 
 const mockFetch = vi.fn();

@@ -25,7 +25,15 @@ app/main/
 │   ├── globals.css               # グローバルスタイル
 │   ├── layout.tsx                # ルートレイアウト
 │   ├── page.tsx                  # ダッシュボード
-│   ├── projects/[id]/page.tsx    # プロジェクト詳細・監視画面
+│   ├── projects/[id]/page.tsx    # プロジェクト詳細・監視画面（薄いコンテナ）
+│   │   ├── components/           # ページ専用表示コンポーネント
+│   │   │   └── ProjectDetailView.tsx
+│   │   ├── hooks/                # ページ専用 hook
+│   │   │   ├── useProjectDetail.ts
+│   │   │   └── useProjectDetail.test.ts
+│   │   └── lib/                  # ページ専用ユーティリティ
+│   │       ├── projectViewModel.ts
+│   │       └── projectViewModel.test.ts
 │   └── projects/new/             # 新規プロジェクト作成
 ├── components/                   # React コンポーネント
 │   ├── AppShell.tsx              # ナビゲーションラップ
@@ -79,10 +87,36 @@ app/main/
 
 #### `app/projects/[id]/page.tsx`
 
-プロジェクト詳細・監視画面。プロジェクト、バッファ、履歴を並行取得し、
-`MonitoringPhase` / `ProjectGantt` / `RightPanel` を制御する。
+プロジェクト詳細・監視画面のコンテナ。`useProjectDetail` から取得した状態を
+`ProjectDetailView` に渡すだけの薄いエントリポイント。
 
-- 責務: 詳細データの並行取得、サブタスク完了/工数更新、トリアージ提案の適用、履歴追加
+- 責務: URL パラメータの解決、ローディング/エラー表示、コンテナとしての繋ぎ込み
+
+#### `app/projects/[id]/components/ProjectDetailView.tsx`
+
+プロジェクト詳細・監視画面の表示コンポーネント。`MonitoringPhase` / `ProjectGantt` /
+`RightPanel` を配置し、バッファ・期日・未完了工数カードを描画する。
+
+- 責務: 表示のみ。データ取得や状態更新は行わない
+
+#### `app/projects/[id]/hooks/useProjectDetail.ts`
+
+プロジェクト詳細ページ用のカスタムフック。プロジェクト・バッファ・履歴の並行取得、
+サブタスク完了/工数更新、トリアージ提案の取得・適用、履歴追加を担う。
+
+- 責務: 詳細データの並行取得、状態管理、ユーザーアクションに対する副作用
+
+#### `app/projects/[id]/lib/projectViewModel.ts`
+
+`Project` / `BufferStatus` を UI 向け表現（`MainTask`、ステータスラベル、期日ラベル、残日数）に変換する。
+
+- 責務: 表示用ビューモデルの生成
+
+#### `app/projects/[id]/hooks/useProjectDetail.ts`（トリアージヘルパー）
+
+トリアージ API の呼び出しと、提案適用時のサブタスク削除/工数削減・履歴追加を担当する。
+
+- 責務: トリアージ関連の副作用をサービス関数として集約
 
 ### Components
 
@@ -293,6 +327,8 @@ npm run test:ui    # UI モード
 - `tests/lib/store.history.test.ts`
 - `tests/lib/store.evaluation.test.ts`
 - `tests/repositories/inMemoryStore.test.ts`
+- `app/projects/[id]/lib/projectViewModel.test.ts`
+- `app/projects/[id]/hooks/useProjectDetail.test.ts`
 
 ## 開発日記（設計変遷）
 
@@ -336,6 +372,28 @@ Repository 層を導入し、データアクセスを抽象化した。
 - `tests/repositories/inMemoryStore.test.ts` を追加し、Repository インスタンス単体での動作を検証
 - テスト 9 ファイル / 61 件、および `tsc --noEmit` が通過
 
+### ProjectDetailPage の薄化
+
+`app/projects/[id]/page.tsx` がデータ取得・状態管理・表示・副作用を全て兼ねていたため、
+責務を view-model / hook / service / presentational component に分割した。
+
+- `app/projects/[id]/lib/projectViewModel.ts` に `toMainTask` / `getStatusMeta` / `getDeadlineLabel` / `getDaysLeft` を切り出し
+  - `Project` + `BufferStatus` → `MainTask` 変換と UI 用メタ情報生成を集約
+- `app/projects/[id]/hooks/useProjectDetail.ts` にデータ取得・state・副作用ハンドラを切り出し
+  - `project` / `status` / `histories` / `loading` / `error` / `panelMode` を一元管理
+  - サブタスク完了・工数更新、トリアージ取得・適用、履歴追加をカプセル化
+- `app/projects/[id]/hooks/useProjectDetail.ts`（トリアージヘルパー） にトリアージ API 呼び出しと提案適用処理をサービス関数として切り出し
+- `app/projects/[id]/components/ProjectDetailView.tsx` を新設し、`page.tsx` から JSX を分離
+  - 表示のみを担当し、データ取得や状態更新は持たない
+- `app/projects/[id]/page.tsx` は `useProjectDetail` から状態を受け取り、`ProjectDetailView` に渡すだけの薄いコンテナに縮小
+- `app/projects/[id]/lib/projectViewModel.test.ts` / `app/projects/[id]/hooks/useProjectDetail.test.ts` を追加
+- テスト 11 ファイル / 71 件、および `tsc --noEmit` が通過
+
+切り出しの際、YAGNI・コロケーションの観点からファイル配置を見直した。
+`ProjectDetailView` / `useProjectDetail` / `projectViewModel` は他ページからの利用が見込めないため、
+`app/projects/[id]/` 配下に集約。`triage.ts` は 2 関数のみで `useProjectDetail` からしか呼ばれないため、
+同ファイル内のヘルパー関数に統合し、過剰な抽象化を抑えた。
+
 ### 今後の拡張（TODO）
 
 - SQLite 等の永続化層の導入
@@ -365,8 +423,9 @@ Repository 層を導入し、データアクセスを抽象化した。
    - `globalThis.__ADS_STORE` / `globalThis.__ADRS_DEMO_SETTINGS` により、テスト・永続化・並列実行が困難
 4. **API Route の肥大化**
    - バリデーション・ユースケース・レスポンス生成が同一ファイルに混在
-5. **UI コンポーネントの肥大化**
-   - `RightPanel.tsx` / `ProjectDetailPage` が状態、API 呼び出し、表示を兼ねている
+5. **UI コンポーネントの肥大化** ✅ `ProjectDetailPage` は分離済
+   - `ProjectDetailPage` を `useProjectDetail` + `ProjectDetailView` に分割し、状態/API 呼び出し/表示を分離
+   - `RightPanel.tsx` は今後のフェーズでさらに分割予定
 6. **永続化層の欠如**
    - サーバー再起動でデータが失われる
 

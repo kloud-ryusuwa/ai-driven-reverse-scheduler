@@ -8,7 +8,7 @@ import {
   getDeadlineLabel,
   getStatusMeta,
   toMainTask,
-} from "@/lib/projectViewModel";
+} from "../lib/projectViewModel";
 import type { BufferStatus, History, Project, TriageProposal } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
