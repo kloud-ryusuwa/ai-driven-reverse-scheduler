@@ -4,8 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import MonitoringPhase from "@/components/MonitoringPhase";
 import RightPanel from "@/components/RightPanel";
-import type { BufferStatus, History, MainTask, Project, TriageProposal } from "@/lib/types";
+import type { BufferStatus, History, Project, TriageProposal } from "@/lib/types";
 import { getStatusFromBuffer } from "@/utils/calculations";
+import {
+  getDaysLeft,
+  getDeadlineLabel,
+  getStatusMeta,
+  toMainTask,
+} from "@/lib/projectViewModel";
 import ProjectGantt from "@/components/ProjectGantt";
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Container, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
@@ -153,29 +159,11 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const taskForMonitoring: MainTask = {
-    id: project.id,
-    title: project.title,
-    deadline: project.deadline,
-    bufferPercentage: status.bufferPercentage,
-    completedSubtasks: project.subtasks.filter((s) => s.isDone).length,
-    totalSubtasks: project.subtasks.length,
-    subtasks: project.subtasks.map((s) => ({
-      id: s.id,
-      projectId: project.id,
-      title: s.title,
-      isDone: s.isDone,
-      estimatedHours: s.estimatedHours,
-    })),
-  };
+  const taskForMonitoring = toMainTask(project, status);
   const currentStatus = getStatusFromBuffer(status.bufferPercentage);
-  const statusMeta = currentStatus === "green"
-    ? { label: "順調", color: "success" as const, message: "現在の計画で期日に到達できる見込みです。" }
-    : currentStatus === "yellow"
-      ? { label: "要注意", color: "warning" as const, message: "余裕が減っています。今のうちに優先度を見直しましょう。" }
-      : { label: "危機", color: "error" as const, message: "現行スコープでは期日超過の可能性があります。削減判断が必要です。" };
-  const deadlineLabel = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric" }).format(new Date(`${project.deadline}T00:00:00`));
-  const daysLeft = Math.max(0, Math.ceil(status.remainingTime / 24));
+  const statusMeta = getStatusMeta(status.bufferPercentage);
+  const deadlineLabel = getDeadlineLabel(project.deadline);
+  const daysLeft = getDaysLeft(status.remainingTime);
   return (
     <Box component="main" sx={{ minHeight: "100vh", py: { xs: 2, md: 4 } }}>
       <Container maxWidth="xl">
