@@ -9,11 +9,6 @@ export function getDemoSettings() {
   return globalThis.__ADRS_DEMO_SETTINGS;
 }
 
-export function getDemoNow(): Date {
-  const value = getDemoSettings().now;
-  return value ? new Date(value) : new Date();
-}
-
 export function updateDemoSettings(patch: { now?: string | null; model?: string }) {
   const settings = getDemoSettings();
   if (patch.now !== undefined) settings.now = patch.now;

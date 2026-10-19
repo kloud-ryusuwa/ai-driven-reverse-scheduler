@@ -1,30 +1,23 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  createHistory,
-  createProject,
-  createSubtask,
-  deleteProject,
-  deleteSubtask,
-  getProject,
-  getSubtasks,
-  listProjects,
-  updateProject,
-  updateSubtask,
-} from "@/lib/store";
-import { updateDemoSettings } from "@/lib/demo";
-import type { ProjectRecord } from "@/lib/types";
+import { createStore } from "@/lib/store";
+import { FixedClock } from "@/lib/clock";
+import type { Evaluation, History, ProjectRecord } from "@/lib/types";
 
-function resetStore() {
-  const store = globalThis.__ADS_STORE;
-  if (store) {
-    store.projects.length = 0;
-    store.histories.length = 0;
-    store.evaluations.length = 0;
-  }
+const FIXED_NOW = new Date("2026-08-20T09:00:00.000Z");
+
+function createTestStore() {
+  const state = {
+    projects: [] as ProjectRecord[],
+    histories: [] as History[],
+    evaluations: [] as Evaluation[],
+  };
+  return { ...createStore(new FixedClock(FIXED_NOW), state), state };
 }
 
-const createSampleProject = (): ProjectRecord =>
-  createProject({
+const createSampleProject = (
+  store: ReturnType<typeof createTestStore>
+): ProjectRecord =>
+  store.createProject({
     title: "プレゼン資料作成",
     deadline: "2026-09-10",
     initialTotalHours: 80,
@@ -35,15 +28,15 @@ const createSampleProject = (): ProjectRecord =>
   });
 
 describe("store", () => {
+  let store: ReturnType<typeof createTestStore>;
+
   beforeEach(() => {
-    resetStore();
-    // createProject が使う現在日時を期日より前に固定
-    updateDemoSettings({ now: "2026-08-20T09:00:00.000Z" });
+    store = createTestStore();
   });
 
-  describe("createProject", () => {
+  describe("store.createProject", () => {
     it("プロジェクトを作成し、サブタスクを紐づける", () => {
-      const project = createSampleProject();
+      const project = createSampleProject(store);
       expect(project.title).toBe("プレゼン資料作成");
       expect(project.subtasks).toHaveLength(2);
       expect(project.subtasks[0].projectId).toBe(project.id);
@@ -51,81 +44,81 @@ describe("store", () => {
     });
 
     it("initialRemainingTime に計画時点の残り時間を設定する", () => {
-      const project = createSampleProject();
+      const project = createSampleProject(store);
       expect(project.initialRemainingTime).toBeGreaterThan(0);
     });
   });
 
-  describe("listProjects", () => {
+  describe("store.listProjects", () => {
     it("すべてのプロジェクトを返す", () => {
-      createSampleProject();
-      createSampleProject();
-      expect(listProjects()).toHaveLength(2);
+      createSampleProject(store);
+      createSampleProject(store);
+      expect(store.listProjects()).toHaveLength(2);
     });
   });
 
-  describe("getProject", () => {
+  describe("store.getProject", () => {
     it("存在するプロジェクトを取得する", () => {
-      const created = createSampleProject();
-      const found = getProject(created.id);
+      const created = createSampleProject(store);
+      const found = store.getProject(created.id);
       expect(found).not.toBeUndefined();
       expect(found?.id).toBe(created.id);
     });
 
     it("存在しない場合は undefined を返す", () => {
-      expect(getProject("proj_not_exist")).toBeUndefined();
+      expect(store.getProject("proj_not_exist")).toBeUndefined();
     });
   });
 
-  describe("updateProject", () => {
+  describe("store.updateProject", () => {
     it("タイトルを更新できる", () => {
-      const created = createSampleProject();
-      const updated = updateProject(created.id, { title: "新しいタイトル" });
+      const created = createSampleProject(store);
+      const updated = store.updateProject(created.id, { title: "新しいタイトル" });
       expect(updated?.title).toBe("新しいタイトル");
-      expect(getProject(created.id)?.title).toBe("新しいタイトル");
+      expect(store.getProject(created.id)?.title).toBe("新しいタイトル");
     });
 
     it("期日を更新すると initialRemainingTime が再計算される", () => {
-      const created = createSampleProject();
+      const created = createSampleProject(store);
       const oldRemainingTime = created.initialRemainingTime;
-      const updated = updateProject(created.id, { deadline: "2026-12-31" });
+      const updated = store.updateProject(created.id, { deadline: "2026-12-31" });
       expect(updated?.deadline).toBe("2026-12-31");
       expect(updated?.initialRemainingTime).toBeGreaterThan(oldRemainingTime);
     });
 
     it("存在しないプロジェクトは undefined を返す", () => {
-      expect(updateProject("proj_not_exist", { title: "x" })).toBeUndefined();
+      expect(store.updateProject("proj_not_exist", { title: "x" })).toBeUndefined();
     });
   });
 
-  describe("deleteProject", () => {
+  describe("store.deleteProject", () => {
     it("プロジェクトを削除できる", () => {
-      const created = createSampleProject();
-      expect(deleteProject(created.id)).toBe(true);
-      expect(getProject(created.id)).toBeUndefined();
+      const created = createSampleProject(store);
+      expect(store.deleteProject(created.id)).toBe(true);
+      expect(store.getProject(created.id)).toBeUndefined();
     });
   });
 
   describe("subtasks", () => {
     it("サブタスクを追加できる", () => {
-      const created = createSampleProject();
-      const subtask = createSubtask(created.id, { title: "レビュー", estimatedHours: 4 });
+      const created = createSampleProject(store);
+      const subtask = store.createSubtask(created.id, { title: "レビュー", estimatedHours: 4 });
       expect(subtask).not.toBeUndefined();
-      expect(getSubtasks(created.id)).toHaveLength(3);
+      expect(store.getSubtasks(created.id)).toHaveLength(3);
     });
 
     it("サブタスクを更新できる", () => {
-      const created = createSampleProject();
+      const created = createSampleProject(store);
       const subtaskId = created.subtasks[0].id;
-      const updated = updateSubtask(created.id, subtaskId, { isDone: true });
+      const updated = store.updateSubtask(created.id, subtaskId, { isDone: true });
       expect(updated?.isDone).toBe(true);
     });
 
     it("サブタスクを削除できる", () => {
-      const created = createSampleProject();
+      const created = createSampleProject(store);
       const subtaskId = created.subtasks[0].id;
-      expect(deleteSubtask(created.id, subtaskId)).toBe(true);
-      expect(getSubtasks(created.id)).toHaveLength(1);
+      expect(store.deleteSubtask(created.id, subtaskId)).toBe(true);
+      expect(store.getSubtasks(created.id)).toHaveLength(1);
     });
   });
 });

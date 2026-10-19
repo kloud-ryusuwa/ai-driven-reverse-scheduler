@@ -135,7 +135,7 @@ describe("calculateBufferStatus", () => {
 describe("toProjectSummary", () => {
   it("ProjectRecord からサマリーを導出する", () => {
     const record = createRecord({ subtasks: createSubtasks(30, 50) });
-    const summary = toProjectSummary(record);
+    const summary = toProjectSummary(record, new Date(CREATED_AT));
 
     expect(summary.id).toBe("proj_1");
     expect(summary.title).toBe("プレゼン資料作成");
@@ -147,7 +147,7 @@ describe("toProjectSummary", () => {
   it("完了数を正しくカウントする", () => {
     const subtasks = createSubtasks(30, 50);
     subtasks[0].isDone = true;
-    const summary = toProjectSummary(createRecord({ subtasks }));
+    const summary = toProjectSummary(createRecord({ subtasks }), new Date(CREATED_AT));
     expect(summary.completedSubtasks).toBe(1);
     expect(summary.totalSubtasks).toBe(2);
   });
@@ -156,7 +156,7 @@ describe("toProjectSummary", () => {
 describe("toProject", () => {
   it("ProjectRecord から詳細情報を含む Project を導出する", () => {
     const record = createRecord({ subtasks: createSubtasks(10) });
-    const project = toProject(record);
+    const project = toProject(record, new Date(CREATED_AT));
 
     expect(project.initialRemainingTime).toBe(120);
     expect(project.initialTotalHours).toBe(80);

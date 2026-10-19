@@ -236,10 +236,22 @@ CCPM スタイルのバッファ計算を担当。
 - `toProjectSummary`: `ProjectRecord` → サマリー
 - `toProject`: `ProjectRecord` → 詳細
 
+#### `lib/clock.ts`
+
+時間取得の抽象化レイヤー。
+
+- `Clock` インターフェース: `now(): Date`
+- `SystemClock`: システム時刻を返す
+- `FixedClock`: テスト用の固定時刻を返す
+- `DemoClock`: `globalThis.__ADRS_DEMO_SETTINGS.now` を参照する旧来のデモ時計動作をラップ
+
+アプリケーション側のデフォルト注入は `DemoClock`、テストでは `FixedClock` を使用する。
+時間に依存するドメイン関数（`calculateBufferStatus` 等）は `now: Date` を引数で受け取る純粋関数とする。
+
 #### `lib/demo.ts`
 
-デモ用の「現在日時」および AI モデル名を管理。
-`globalThis.__ADRS_DEMO_SETTINGS` に保持し、テスト時には `updateDemoSettings` で時計を固定できる。
+デモ用の AI モデル名およびデバッグ用「現在日時」設定を `globalThis.__ADRS_DEMO_SETTINGS` に保持。
+時計そのものの取得は `lib/clock.ts` の `DemoClock` が担当し、本ファイルは設定の読み書きのみを行う。
 
 #### `lib/pagination.ts`
 
@@ -419,8 +431,9 @@ Repository 層を導入し、データアクセスを抽象化した。
    - `lib/store.ts` は Repository へのファサードに縮小
    - `lib/repositories/` にデータアクセスを集約
    - 軽微なドメイン計算（`hoursUntilDeadline` 等）は引き続き `lib/buffer.ts` が担当
-3. **グローバル状態への依存**
-   - `globalThis.__ADS_STORE` / `globalThis.__ADRS_DEMO_SETTINGS` により、テスト・永続化・並列実行が困難
+3. **グローバル状態への依存** ✅ Clock DI により `getDemoNow()` の直接依存は解消
+   - `globalThis.__ADS_STORE` は `lib/store.ts` でラップされ、時計に関しては `Clock` 経由で注入可能
+   - `globalThis.__ADRS_DEMO_SETTINGS` は `DemoClock` / `updateDemoSettings` で局所化
 4. **API Route の肥大化**
    - バリデーション・ユースケース・レスポンス生成が同一ファイルに混在
 5. **UI コンポーネントの肥大化** ✅ `ProjectDetailPage` は分離済
@@ -433,7 +446,7 @@ Repository 層を導入し、データアクセスを抽象化した。
 
 1. 型定義の統合（`lib/types.ts` を正規化）
 2. ✅ Repository パターンの導入（`globalThis.__ADS_STORE` をラップ）
-3. Clock サービスの DI 化（`getDemoNow()` のグローバル依存を解消）
+3. ✅ Clock サービスの DI 化（`getDemoNow()` のグローバル依存を解消）
 4. ドメインサービスの切り出し（ProjectLifecycleService, BufferService, TriageService）
 5. API Route を薄いコントローラーにする
 6. Container / Presentational コンポーネントの分離

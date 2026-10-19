@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { InMemoryStoreRepository } from "@/lib/repositories/inMemoryStore";
-import { updateDemoSettings } from "@/lib/demo";
+import { FixedClock } from "@/lib/clock";
 import type { ProjectRecord } from "@/lib/types";
+
+const FIXED_NOW = new Date("2026-08-20T09:00:00.000Z");
 
 function createStore() {
   return {
@@ -9,6 +11,10 @@ function createStore() {
     histories: [],
     evaluations: [],
   };
+}
+
+function createRepository(store = createStore()) {
+  return new InMemoryStoreRepository(store, new FixedClock(FIXED_NOW));
 }
 
 function createSampleProject(repo: InMemoryStoreRepository): ProjectRecord {
@@ -25,13 +31,13 @@ function createSampleProject(repo: InMemoryStoreRepository): ProjectRecord {
 
 describe("InMemoryStoreRepository", () => {
   beforeEach(() => {
-    updateDemoSettings({ now: "2026-08-20T09:00:00.000Z" });
+    // 必要に応じて globalThis.__ADS_STORE もクリア
   });
 
   describe("createProject / getProject", () => {
     it("プロジェクトを作成・取得できる", () => {
       const store = createStore();
-      const repo = new InMemoryStoreRepository(store);
+      const repo = createRepository(store);
       const project = createSampleProject(repo);
 
       expect(repo.getProject(project.id)?.title).toBe("プレゼン資料作成");
@@ -42,7 +48,7 @@ describe("InMemoryStoreRepository", () => {
   describe("deleteProject", () => {
     it("プロジェクト削除時に紐づく履歴・評価も削除する", () => {
       const store = createStore();
-      const repo = new InMemoryStoreRepository(store);
+      const repo = createRepository(store);
       const project = createSampleProject(repo);
       const history = repo.createHistory(project.id, "first")!;
       repo.createEvaluation(history.id, {
@@ -65,7 +71,7 @@ describe("InMemoryStoreRepository", () => {
   describe("createSubtask / updateSubtask / deleteSubtask", () => {
     it("サブタスクのライフサイクルを管理する", () => {
       const store = createStore();
-      const repo = new InMemoryStoreRepository(store);
+      const repo = createRepository(store);
       const project = createSampleProject(repo);
 
       const sub = repo.createSubtask(project.id, {
@@ -85,7 +91,7 @@ describe("InMemoryStoreRepository", () => {
   describe("listProjects with statusFilter", () => {
     it("status フィルタが動作する", () => {
       const store = createStore();
-      const repo = new InMemoryStoreRepository(store);
+      const repo = createRepository(store);
       const greenProject = createSampleProject(repo);
 
       const redProject = repo.createProject({

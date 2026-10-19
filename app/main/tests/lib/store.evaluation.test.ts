@@ -1,25 +1,23 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  createEvaluation,
-  createHistory,
-  createProject,
-  deleteProject,
-  getEvaluation,
-} from "@/lib/store";
-import { updateDemoSettings } from "@/lib/demo";
-import type { ProjectRecord } from "@/lib/types";
+import { createStore } from "@/lib/store";
+import { FixedClock } from "@/lib/clock";
+import type { Evaluation, History, ProjectRecord } from "@/lib/types";
 
-function resetStore() {
-  const store = globalThis.__ADS_STORE;
-  if (store) {
-    store.projects.length = 0;
-    store.histories.length = 0;
-    store.evaluations.length = 0;
-  }
+const FIXED_NOW = new Date("2026-08-20T09:00:00.000Z");
+
+function createTestStore() {
+  const state = {
+    projects: [] as ProjectRecord[],
+    histories: [] as History[],
+    evaluations: [] as Evaluation[],
+  };
+  return { ...createStore(new FixedClock(FIXED_NOW), state), state };
 }
 
-const createSampleProject = (): ProjectRecord =>
-  createProject({
+const createSampleProject = (
+  store: ReturnType<typeof createTestStore>
+): ProjectRecord =>
+  store.createProject({
     title: "プレゼン資料作成",
     deadline: "2026-09-10",
     initialTotalHours: 80,
@@ -27,12 +25,13 @@ const createSampleProject = (): ProjectRecord =>
   });
 
 describe("store - evaluations", () => {
+  let store: ReturnType<typeof createTestStore>;
+
   beforeEach(() => {
-    resetStore();
-    updateDemoSettings({ now: "2026-08-20T09:00:00.000Z" });
+    store = createTestStore();
   });
 
-  const makeEvaluation = (overrides: Partial<Parameters<typeof createEvaluation>[1]> = {}) => ({
+  const makeEvaluation = (overrides: Partial<Parameters<typeof store.createEvaluation>[1]> = {}) => ({
     triageAccuracy: 4,
     psychologicalRelief: 5,
     feasibility: 3,
@@ -41,32 +40,32 @@ describe("store - evaluations", () => {
   });
 
   it("評価を作成・取得できる", () => {
-    const created = createSampleProject();
-    const history = createHistory(created.id, "AI提案を適用")!;
-    const evaluation = createEvaluation(history.id, makeEvaluation());
+    const created = createSampleProject(store);
+    const history = store.createHistory(created.id, "AI提案を適用")!;
+    const evaluation = store.createEvaluation(history.id, makeEvaluation());
     expect(evaluation?.triageAccuracy).toBe(4);
     expect(evaluation?.comment).toBe("良い提案");
-    expect(getEvaluation(history.id)?.id).toBe(evaluation?.id);
+    expect(store.getEvaluation(history.id)?.id).toBe(evaluation?.id);
   });
 
   it("同じ履歴に対する評価は上書きされる", () => {
-    const created = createSampleProject();
-    const history = createHistory(created.id, "AI提案を適用")!;
-    const first = createEvaluation(history.id, makeEvaluation({ triageAccuracy: 3 }));
-    const second = createEvaluation(history.id, makeEvaluation({ triageAccuracy: 5 }));
+    const created = createSampleProject(store);
+    const history = store.createHistory(created.id, "AI提案を適用")!;
+    const first = store.createEvaluation(history.id, makeEvaluation({ triageAccuracy: 3 }));
+    const second = store.createEvaluation(history.id, makeEvaluation({ triageAccuracy: 5 }));
     expect(second?.id).toBe(first?.id);
-    expect(getEvaluation(history.id)?.triageAccuracy).toBe(5);
+    expect(store.getEvaluation(history.id)?.triageAccuracy).toBe(5);
   });
 
   it("存在しない履歴に対しては作成できない", () => {
-    expect(createEvaluation("hist_missing", makeEvaluation())).toBeUndefined();
+    expect(store.createEvaluation("hist_missing", makeEvaluation())).toBeUndefined();
   });
 
   it("プロジェクト削除時に紐づく評価も削除される", () => {
-    const created = createSampleProject();
-    const history = createHistory(created.id, "AI提案を適用")!;
-    const evaluation = createEvaluation(history.id, makeEvaluation())!;
-    deleteProject(created.id);
-    expect(getEvaluation(history.id)).toBeUndefined();
+    const created = createSampleProject(store);
+    const history = store.createHistory(created.id, "AI提案を適用")!;
+    const evaluation = store.createEvaluation(history.id, makeEvaluation())!;
+    store.deleteProject(created.id);
+    expect(store.getEvaluation(history.id)).toBeUndefined();
   });
 });

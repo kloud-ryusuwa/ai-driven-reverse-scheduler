@@ -1,5 +1,5 @@
 import { hoursUntilDeadline, toProjectSummary } from "@/lib/buffer";
-import { getDemoNow } from "@/lib/demo";
+import type { Clock } from "@/lib/clock";
 import { generateId } from "@/lib/id";
 import type {
   CreateEvaluationInput,
@@ -16,11 +16,14 @@ type StoreState = {
 };
 
 export class InMemoryStoreRepository implements IStoreRepository {
-  constructor(private store: StoreState) {}
+  constructor(
+    private store: StoreState,
+    private clock: Clock
+  ) {}
 
   // Projects
   createProject(input: CreateProjectInput): ProjectRecord {
-    const demoNow = getDemoNow();
+    const demoNow = this.clock.now();
     const now = demoNow.toISOString();
     const projectId = generateId("proj");
 
@@ -48,7 +51,8 @@ export class InMemoryStoreRepository implements IStoreRepository {
   listProjects(statusFilter?: string): ProjectRecord[] {
     const records = [...this.store.projects];
     if (!statusFilter) return records;
-    return records.filter((p) => toProjectSummary(p).status === statusFilter);
+    const now = this.clock.now();
+    return records.filter((p) => toProjectSummary(p, now).status === statusFilter);
   }
 
   getProject(id: string): ProjectRecord | undefined {
@@ -73,7 +77,7 @@ export class InMemoryStoreRepository implements IStoreRepository {
       );
     }
 
-    project.updatedAt = getDemoNow().toISOString();
+    project.updatedAt = this.clock.now().toISOString();
     return project;
   }
 
@@ -119,7 +123,7 @@ export class InMemoryStoreRepository implements IStoreRepository {
     };
 
     project.subtasks.push(subtask);
-    project.updatedAt = getDemoNow().toISOString();
+    project.updatedAt = this.clock.now().toISOString();
     return subtask;
   }
 
@@ -139,7 +143,7 @@ export class InMemoryStoreRepository implements IStoreRepository {
       subtask.estimatedHours = patch.estimatedHours;
     if (patch.isDone !== undefined) subtask.isDone = patch.isDone;
 
-    project.updatedAt = getDemoNow().toISOString();
+    project.updatedAt = this.clock.now().toISOString();
     return subtask;
   }
 
@@ -151,7 +155,7 @@ export class InMemoryStoreRepository implements IStoreRepository {
     project.subtasks = project.subtasks.filter((s) => s.id !== subtaskId);
     const deleted = project.subtasks.length < before;
     if (deleted) {
-      project.updatedAt = getDemoNow().toISOString();
+      project.updatedAt = this.clock.now().toISOString();
     }
     return deleted;
   }
@@ -171,7 +175,7 @@ export class InMemoryStoreRepository implements IStoreRepository {
     const history: History = {
       id: generateId("hist"),
       projectId,
-      timestamp: getDemoNow().toISOString(),
+      timestamp: this.clock.now().toISOString(),
       content,
     };
 

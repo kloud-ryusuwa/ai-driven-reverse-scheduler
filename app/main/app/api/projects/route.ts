@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createProject, listProjects } from "@/lib/store";
 import { toProject, toProjectSummary } from "@/lib/buffer";
+import { DemoClock } from "@/lib/clock";
 import { parsePagination, paginate } from "@/lib/pagination";
 import {
   isNonEmptyString,
@@ -9,6 +10,8 @@ import {
   jsonError,
   parseJson,
 } from "@/lib/api";
+
+const clock = new DemoClock();
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -24,8 +27,9 @@ export async function GET(request: NextRequest) {
     return jsonError("status は green / yellow / red のいずれかを指定してください", 400);
   }
 
+  const now = clock.now();
   const records = listProjects(statusFilter);
-  const summaries = records.map(toProjectSummary);
+  const summaries = records.map((r) => toProjectSummary(r, now));
   const result = paginate(summaries, page, perPage);
 
   return NextResponse.json({
@@ -91,5 +95,5 @@ export async function POST(request: NextRequest) {
     subtasks: normalizedSubtasks,
   });
 
-  return NextResponse.json(toProject(record), { status: 201 });
+  return NextResponse.json(toProject(record, clock.now()), { status: 201 });
 }

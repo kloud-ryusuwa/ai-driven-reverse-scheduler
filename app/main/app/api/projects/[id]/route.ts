@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteProject, getProject, updateProject } from "@/lib/store";
 import { toProject } from "@/lib/buffer";
+import { DemoClock } from "@/lib/clock";
 import {
   isNonEmptyString,
   isValidDateString,
@@ -9,6 +10,8 @@ import {
   resolveParams,
   type RouteParams,
 } from "@/lib/api";
+
+const clock = new DemoClock();
 
 export async function GET(
   _request: NextRequest,
@@ -21,7 +24,7 @@ export async function GET(
     return jsonError("プロジェクトが見つかりません", 404);
   }
 
-  return NextResponse.json(toProject(record));
+  return NextResponse.json(toProject(record, clock.now()));
 }
 
 export async function PATCH(
@@ -63,7 +66,7 @@ export async function PATCH(
     return jsonError("プロジェクトが見つかりません", 404);
   }
 
-  return NextResponse.json(toProject(updated));
+  return NextResponse.json(toProject(updated, clock.now()));
 }
 
 export async function DELETE(

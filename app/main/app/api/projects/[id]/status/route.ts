@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProject } from "@/lib/store";
 import { calculateBufferStatus } from "@/lib/buffer";
+import { DemoClock } from "@/lib/clock";
 import { jsonError, resolveParams, type RouteParams } from "@/lib/api";
+
+const clock = new DemoClock();
 
 export async function GET(
   _request: NextRequest,
@@ -14,5 +17,5 @@ export async function GET(
     return jsonError("プロジェクトが見つかりません", 404);
   }
 
-  return NextResponse.json(calculateBufferStatus(record));
+  return NextResponse.json(calculateBufferStatus(record, clock.now()));
 }

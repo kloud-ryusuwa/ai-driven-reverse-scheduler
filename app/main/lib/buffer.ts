@@ -1,13 +1,12 @@
 import { getStatusFromBuffer } from "@/utils/calculations";
 import type { BufferStatus, Project, ProjectRecord, ProjectSummary, SubTask } from "./types";
-import { getDemoNow } from "./demo";
 
 export function parseDeadline(deadline: string): Date {
   // YYYY-MM-DD を UTC 0時として扱う
   return new Date(`${deadline}T00:00:00.000Z`);
 }
 
-export function hoursUntilDeadline(deadline: string, from = new Date()): number {
+export function hoursUntilDeadline(deadline: string, from: Date): number {
   const target = parseDeadline(deadline);
   const diffMs = target.getTime() - from.getTime();
   return Math.max(0, diffMs / (1000 * 60 * 60));
@@ -17,7 +16,7 @@ export function remainingHours(subtasks: SubTask[]): number {
   return subtasks.filter((s) => !s.isDone).reduce((sum, s) => sum + s.estimatedHours, 0);
 }
 
-export function calculateBufferStatus(record: ProjectRecord, now = getDemoNow()): BufferStatus {
+export function calculateBufferStatus(record: ProjectRecord, now: Date): BufferStatus {
   const remainingTime = hoursUntilDeadline(record.deadline, now);
   const remHours = remainingHours(record.subtasks);
 
@@ -42,8 +41,8 @@ export function calculateBufferStatus(record: ProjectRecord, now = getDemoNow())
   };
 }
 
-export function toProjectSummary(record: ProjectRecord): ProjectSummary {
-  const status = calculateBufferStatus(record);
+export function toProjectSummary(record: ProjectRecord, now: Date): ProjectSummary {
+  const status = calculateBufferStatus(record, now);
   const completedSubtasks = record.subtasks.filter((s) => s.isDone).length;
 
   return {
@@ -57,9 +56,9 @@ export function toProjectSummary(record: ProjectRecord): ProjectSummary {
   };
 }
 
-export function toProject(record: ProjectRecord): Project {
+export function toProject(record: ProjectRecord, now: Date): Project {
   return {
-    ...toProjectSummary(record),
+    ...toProjectSummary(record, now),
     initialRemainingTime: record.initialRemainingTime,
     initialTotalHours: record.initialTotalHours,
     subtasks: record.subtasks,

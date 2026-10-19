@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProject } from "@/lib/store";
 import { calculateBufferStatus } from "@/lib/buffer";
+import { DemoClock } from "@/lib/clock";
 import type { SubTask, TriageProposal } from "@/lib/types";
 import { jsonError, parseJson, resolveParams, type RouteParams } from "@/lib/api";
+
+const clock = new DemoClock();
 
 export async function POST(
   request: NextRequest,
@@ -48,7 +51,7 @@ export async function POST(
     return jsonError("context.priority は must / should / could のいずれかです", 400);
   }
 
-  const status = calculateBufferStatus(record);
+  const status = calculateBufferStatus(record, clock.now());
   const undone = record.subtasks
     .filter((s) => !s.isDone)
     .sort((a, b) => b.estimatedHours - a.estimatedHours);
